@@ -3,8 +3,8 @@
 //  Replace these values after creating your Supabase project
 // ═══════════════════════════════════════════════════════
 
-const SUPABASE_URL  = 'https://YOUR_PROJECT_REF.supabase.co';
-const SUPABASE_ANON = 'YOUR_ANON_PUBLIC_KEY';
+const SUPABASE_URL  = 'https://nplxdqhnracszrdlkeap.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_oyk2ztdaH2z-_u2Iw3wcBg_cKlXmyvy';
 
 // Import from CDN (no build step needed)
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
