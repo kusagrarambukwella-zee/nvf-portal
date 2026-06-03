@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nvf-portal",
+  "compatibility_date": "2026-06-03",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "client-portal"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
