@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVAHFALCONS CLIENT PORTAL</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F8FA; --white:#fff; --border:#E5E7EB; --border-md:#D1D5DB;
+  --teal:#0077A8; --teal-lt:#E8F4FA; --teal-md:#CCE8F4; --teal-dk:#005A80;
+  --text:#111827; --t2:#374151; --t3:#6B7280; --t4:#9CA3AF;
+  --green:#059669; --green-bg:#ECFDF5;
+  --amber:#D97706; --amber-bg:#FFFBEB;
+  --red:#DC2626; --red-bg:#FEF2F2;
+  --blue:#2563EB; --blue-bg:#EFF6FF;
+  --sidebar:230px; --r:10px; --rs:7px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 12px rgba(0,0,0,.08); --sh-lg:0 8px 24px rgba(0,0,0,.10);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border-md);border-radius:5px}
+
+/* LOGIN */
+#login-page{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.lw{width:100%;max-width:400px;padding:24px}
+.l-logo{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:28px}
+.l-mark{width:42px;height:42px;border-radius:10px;background:var(--teal);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.l-mark img{width:100%;height:100%;object-fit:contain;filter:brightness(0) invert(1)}
+.l-name{font-size:19px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.l-name span{color:var(--teal)}
+.l-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:28px;box-shadow:var(--sh-md)}
+.l-title{font-size:20px;font-weight:700;margin-bottom:3px}
+.l-sub{font-size:13px;color:var(--t3);margin-bottom:20px}
+.d-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.d-chip{border:1px solid var(--border);border-radius:var(--rs);padding:9px 12px;cursor:pointer;transition:all .15s;text-align:center}
+.d-chip:hover{border-color:var(--teal);background:var(--teal-lt)}
+.d-role{font-size:10px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px;font-family:'JetBrains Mono',monospace}
+.d-cred{font-size:11px;color:var(--t3)}
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.fi{width:100%;border:1px solid var(--border-md);border-radius:var(--rs);padding:10px 12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);background:var(--white);outline:none;transition:all .15s}
+.fi:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,119,168,.10)}
+.fi::placeholder{color:var(--t4)}
+.btn-login{width:100%;background:var(--teal);border:none;border-radius:var(--rs);padding:12px;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s;margin-top:4px}
+.btn-login:hover{background:var(--teal-dk)}
+.l-foot{text-align:center;margin-top:18px;font-size:11px;color:var(--t4)}
+
+/* SIDEBAR */
+#app{display:flex;min-height:100vh}
+.sb{width:var(--sidebar);flex-shrink:0;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50}
+.sb-hd{padding:16px 14px 12px;border-bottom:1px solid var(--border)}
+.sb-logo{display:flex;align-items:center;gap:10px}
+.sb-mark{width:30px;height:30px;border-radius:7px;background:var(--teal);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.sb-mark img{width:100%;height:100%;object-fit:contain;filter:brightness(0) invert(1)}
+.sb-br{font-size:12px;font-weight:800;color:var(--text);letter-spacing:-.2px}
+.sb-br span{color:var(--teal)}
+.sb-tag{font-size:9px;color:var(--t4);font-family:'JetBrains Mono',monospace;letter-spacing:.1em}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 8px}
+.sb-sec{font-size:10px;font-weight:600;color:var(--t4);padding:10px 10px 4px;letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.sb-it{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;transition:all .12s;color:var(--t3);font-size:13px;font-weight:500;margin-bottom:1px}
+.sb-it:hover{background:var(--bg);color:var(--text)}
+.sb-it.active{background:var(--teal-lt);color:var(--teal);font-weight:600}
+.sb-ic{font-size:14px;width:17px;text-align:center;flex-shrink:0;opacity:.65}
+.sb-it.active .sb-ic{opacity:1}
+.sb-bx{margin-left:auto;background:var(--teal);color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:1px 7px;font-family:'JetBrains Mono',monospace}
+.sb-bx.am{background:var(--amber)}
+.sb-usr{padding:11px 13px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px}
+.u-av{width:30px;height:30px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.u-nm{font-size:13px;font-weight:600;color:var(--text)}
+.u-rl{font-size:10px;color:var(--teal);font-family:'JetBrains Mono',monospace}
+.u-out{margin-left:auto;background:none;border:none;color:var(--t4);cursor:pointer;font-size:15px;transition:color .15s}
+.u-out:hover{color:var(--red)}
+
+/* MAIN */
+.mn{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.tpb{background:var(--white);border-bottom:1px solid var(--border);height:56px;padding:0 26px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:40}
+.tpb-title{font-size:15px;font-weight:700;color:var(--text)}
+.tpb-r{margin-left:auto;display:flex;align-items:center;gap:8px}
+.tb{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:var(--rs);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:var(--white);color:var(--t2)}
+.tb:hover{border-color:var(--border-md);background:var(--bg)}
+.tb.pr{background:var(--teal);border-color:var(--teal);color:#fff}
+.tb.pr:hover{background:var(--teal-dk)}
+.cnt{padding:26px;flex:1}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.ps{display:none}
+.ps.active{display:block;animation:fu .22s ease}
+
+/* PAGE HEADER */
+.ph{margin-bottom:22px}
+.pe{font-size:11px;font-weight:600;color:var(--teal);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;font-family:'JetBrains Mono',monospace}
+.pt{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.ps2{font-size:13px;color:var(--t3);margin-top:4px}
+
+/* GRIDS */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:18px}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:18px}
+
+/* CARD */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
+.chd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ct{font-size:13px;font-weight:600;color:var(--text)}
+.cs{font-size:12px;color:var(--t3);margin-top:2px}
+
+/* STAT */
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
+.sn{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1;margin-bottom:4px}
+.sl{font-size:12px;color:var(--t3);font-weight:500}
+.sm{font-size:11px;color:var(--t4);margin-top:7px}
+.si{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+
+/* BADGE */
+.b{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 9px;font-size:11px;font-weight:600;white-space:nowrap}
+.bg{background:var(--green-bg);color:var(--green)}
+.bam{background:var(--amber-bg);color:var(--amber)}
+.br{background:var(--red-bg);color:var(--red)}
+.bbl{background:var(--blue-bg);color:var(--blue)}
+.bt{background:var(--teal-lt);color:var(--teal)}
+.bgr{background:var(--bg);color:var(--t3);border:1px solid var(--border)}
+
+/* PROGRESS */
+.pw{background:var(--bg);border-radius:20px;height:5px;overflow:hidden}
+.pb{height:100%;border-radius:20px;background:var(--teal);transition:width .4s ease}
+
+/* TABLE */
+.tw{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:18px}
+.th{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.tht{font-size:13px;font-weight:600;color:var(--text)}
+table.dt{width:100%;border-collapse:collapse}
+table.dt thead th{padding:9px 14px;font-size:11px;font-weight:600;color:var(--t3);text-align:left;border-bottom:1px solid var(--border);background:var(--bg);letter-spacing:.04em;text-transform:uppercase}
+table.dt tbody td{padding:11px 14px;font-size:13px;color:var(--t2);border-bottom:1px solid var(--border);vertical-align:middle}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt tbody tr:hover{background:#FAFBFC}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;border-radius:var(--rs);padding:8px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;border:none}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-p{background:var(--teal);color:#fff}
+.btn-p:hover{background:var(--teal-dk)}
+.btn-s{background:var(--white);color:var(--t2);border:1px solid var(--border)}
+.btn-s:hover{border-color:var(--border-md);background:var(--bg)}
+.btn-ok{background:var(--green-bg);color:var(--green);border:1px solid rgba(5,150,105,.2)}
+.btn-ok:hover{background:#D1FAE5}
+.btn-no{background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.15)}
+.btn-no:hover{background:#FEE2E2}
+
+/* FORM */
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fgp{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.flb{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.04em}
+.fin{border:1px solid var(--border-md);border-radius:var(--rs);padding:8px 11px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text);background:var(--white);outline:none;transition:all .15s;width:100%}
+.fin:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,119,168,.10)}
+.fin::placeholder{color:var(--t4)}
+select.fin option{background:var(--white)}
+textarea.fin{resize:vertical;min-height:68px}
+
+/* TIMELINE */
+.tl{padding-left:24px;position:relative}
+.tl::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--border)}
+.tli{position:relative;margin-bottom:0}
+.tld{position:absolute;left:-20px;top:13px;width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:var(--white)}
+.tld.dn{background:var(--green);border-color:var(--green)}
+.tld.ac{background:var(--teal);border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,119,168,.15)}
+.tlc{border:1px solid var(--border);border-radius:var(--rs);padding:11px 13px;margin-bottom:6px;background:var(--white);cursor:pointer;transition:border-color .15s}
+.tlc:hover{border-color:var(--border-md)}
+.tlc.tlca{border-color:var(--teal);background:var(--teal-lt)}
+.tlnum{font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace;margin-bottom:2px}
+.tlnm{font-size:13px;font-weight:600;color:var(--text)}
+.tldt{font-size:11px;color:var(--t3);margin-top:3px}
+.tlnt{font-size:12px;color:var(--t3);margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+
+/* MEETING */
+.mtg{display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--r);background:var(--white);margin-bottom:9px;cursor:pointer;transition:all .15s}
+.mtg:hover{border-color:var(--border-md);box-shadow:var(--sh)}
+.md{background:var(--teal);color:#fff;border-radius:var(--rs);padding:9px 11px;text-align:center;flex-shrink:0;min-width:48px}
+.mdy{font-size:19px;font-weight:800;line-height:1}
+.mmo{font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.mi{flex:1}
+.mt{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.mtm{font-size:12px;color:var(--t3);margin-bottom:3px}
+.mag{font-size:11px;color:var(--t4)}
+.mjn{background:var(--teal-lt);color:var(--teal);border:1px solid var(--teal-md);border-radius:var(--rs);padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;transition:all .15s}
+.mjn:hover{background:var(--teal);color:#fff}
+
+/* INVOICE */
+.ivc{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:12px;box-shadow:var(--sh)}
+.ivn{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);margin-bottom:3px}
+.iva{font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.5px}
+.iva small{font-size:12px;color:var(--t3);font-weight:400;font-family:'Plus Jakarta Sans',sans-serif}
+
+/* DOC */
+.doc{display:flex;align-items:center;gap:11px;padding:11px 13px;border:1px solid var(--border);border-radius:var(--rs);background:var(--white);margin-bottom:7px;cursor:pointer;transition:all .15s}
+.doc:hover{border-color:var(--border-md)}
+.dico{font-size:20px;flex-shrink:0}
+.dnm{font-size:13px;font-weight:600;color:var(--text)}
+.dmt{font-size:11px;color:var(--t3)}
+.dsz{margin-left:auto;font-size:11px;color:var(--t4)}
+
+/* UPLOAD */
+.upz{border:1.5px dashed var(--border-md);border-radius:var(--r);padding:26px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg)}
+.upz:hover{border-color:var(--teal);background:var(--teal-lt)}
+.upico{font-size:26px;margin-bottom:7px}
+.uptx{font-size:13px;color:var(--t2);font-weight:500}
+.upsb{font-size:11px;color:var(--t4);margin-top:3px}
+
+/* CHART */
+.cha{background:var(--bg);border-radius:var(--rs);padding:14px}
+.cbs{display:flex;align-items:flex-end;gap:7px;height:100px}
+.cb{flex:1;border-radius:4px 4px 0 0;background:var(--teal-md);transition:background .15s;cursor:pointer}
+.cb:hover{background:var(--teal)}
+.cb.hi{background:var(--teal)}
+.cxl{display:flex;gap:7px;margin-top:5px}
+.cx{flex:1;text-align:center;font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace}
+
+/* CHAT */
+.chw{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.chh{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg)}
+.cms{height:270px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.msg{display:flex;gap:8px;max-width:75%}
+.msg.snt{margin-left:auto;flex-direction:row-reverse}
+.mav{width:26px;height:26px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.mbl{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-size:13px;color:var(--t2);line-height:1.5}
+.msg.snt .mbl{background:var(--teal);border-color:var(--teal);color:#fff}
+.mts{font-size:10px;color:var(--t4);margin-top:3px}
+.msg.snt .mts{text-align:right}
+.cia{padding:11px 13px;border-top:1px solid var(--border);display:flex;gap:9px;background:var(--white)}
+.cii{flex:1;border:1px solid var(--border-md);border-radius:var(--rs);padding:8px 11px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text);outline:none}
+.cii:focus{border-color:var(--teal)}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:18px}
+.tab{padding:9px 15px;font-size:13px;font-weight:500;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+
+/* ACTIVITY */
+.aci{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.aci:last-child{border-bottom:none}
+.acd{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.act{font-size:13px;color:var(--t2);line-height:1.5}
+.acm{font-size:11px;color:var(--t4);margin-top:2px}
+
+/* RISK */
+.risk{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600}
+.rl{background:var(--green-bg);color:var(--green)}
+.rm{background:var(--amber-bg);color:var(--amber)}
+.rh{background:var(--red-bg);color:var(--red)}
+
+/* STARS */
+.stars{display:flex;gap:4px}
+.star{font-size:20px;cursor:pointer;color:var(--border-md);transition:color .1s}
+.star.on{color:#F59E0B}
+
+/* SIGN-OFF */
+.sob{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:26px;text-align:center}
+.cert{border:1px solid var(--border);border-radius:var(--r);padding:28px;text-align:center;background:var(--white);position:relative;overflow:hidden}
+.cert::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--teal)}
+
+/* SERVICE CARD */
+.svc{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;transition:all .15s;position:relative}
+.svc:hover{border-color:var(--border-md);box-shadow:var(--sh-md)}
+.svc.ft{border-color:var(--teal)}
+.svct{font-size:10px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;font-family:'JetBrains Mono',monospace;margin-bottom:5px}
+.svcn{font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px}
+.svcp{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.3px;margin-bottom:12px}
+.svcp span{font-size:12px;color:var(--t3);font-weight:400}
+.svcf{list-style:none;margin-bottom:14px}
+.svcf li{font-size:12px;color:var(--t3);padding:4px 0;border-bottom:1px solid var(--border);display:flex;gap:7px;align-items:flex-start}
+.svcf li::before{content:'✓';color:var(--teal);font-weight:700;flex-shrink:0}
+.fbd{position:absolute;top:12px;right:12px;background:var(--teal);color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:2px 9px}
+
+/* MODAL */
+.mov{position:fixed;inset:0;background:rgba(17,24,39,.3);backdrop-filter:blur(2px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.mov.open{opacity:1;pointer-events:all}
+.mod{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:500px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:var(--sh-lg);transform:translateY(10px);transition:transform .2s}
+.mov.open .mod{transform:translateY(0)}
+.mhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.mtt{font-size:16px;font-weight:700;color:var(--text)}
+.mcl{background:none;border:none;color:var(--t4);font-size:17px;cursor:pointer;line-height:1}
+.mcl:hover{color:var(--text)}
+
+/* NOTIF */
+.nfi{display:flex;gap:11px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.nfi:hover{background:var(--bg)}
+.nfi.unr{background:#FAFEFF}
+.nico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ntx{font-size:13px;color:var(--t2);margin-bottom:2px}
+.nmt{font-size:11px;color:var(--t4)}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){
+  :root{--sidebar:0px}
+  .sb{transform:translateX(-100%)}
+  .sb.open{transform:translateX(0)}
+  .mn{margin-left:0}
+  .g4,.g3,.g2,.g21{grid-template-columns:1fr}
+  .fr{grid-template-columns:1fr}
+  .cnt{padding:14px}
+  .tpb{padding:0 14px}
+  #mbtn{display:block!important}
+}
+</style>
+</head>
+<body>
+<!-- LOGIN -->
+<div id="login-page">
+  <div class="lw">
+    <div class="l-logo">
+      <div class="l-mark"><img src="data:image/jpeg;base64,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" alt=""></div>
+      <div>
+        <div class="l-name">NOVAH<span>FALCONS</span></div>
+        <div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace;letter-spacing:.1em">CLIENT PORTAL</div>
+      </div>
+    </div>
+    <div class="l-card">
+      <div class="l-title">Sign in</div>
+      <div class="l-sub">Access your project portal</div>
+      <div class="d-row">
+        <div class="d-chip" onclick="fa()"><div class="d-role">Super Admin</div><div class="d-cred">admin / admin123</div></div>
+        <div class="d-chip" onclick="fc()"><div class="d-role">Client</div><div class="d-cred">client / client123</div></div>
+      </div>
+      <div class="fg"><label class="fl">Username</label><input id="lu" class="fi" type="text" placeholder="Enter username"></div>
+      <div class="fg"><label class="fl">Password</label><input id="lp" class="fi" type="password" placeholder="••••••••"></div>
+      <button class="btn-login" onclick="doLogin()">Sign In</button>
+    </div>
+    <div class="l-foot">NovahFalcons (PVT) Ltd · SnugSpace, 269/1 High Level Rd, Pannipitiya · +94 76 993 8077</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <nav class="sb" id="sb">
+    <div class="sb-hd">
+      <div class="sb-logo">
+        <div class="sb-mark"><img src="data:image/jpeg;base64,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" alt=""></div>
+        <div><div class="sb-br">NOVAH<span>FALCONS</span></div><div class="sb-tag">CLIENT PORTAL</div></div>
+      </div>
+    </div>
+    <div class="sb-nav" id="an" style="display:none">
+      <div class="sb-sec">Overview</div>
+      <div class="sb-it active" onclick="go('ad')">&#9635; Dashboard</div>
+      <div class="sb-it" onclick="go('ap')">&#9672; Projects <span class="sb-bx">7</span></div>
+      <div class="sb-sec">Management</div>
+      <div class="sb-it" onclick="go('ac')">&#11044; Clients</div>
+      <div class="sb-it" onclick="go('ai')">&#9678; Invoices</div>
+      <div class="sb-it" onclick="go('apy')">&#9670; Payments <span class="sb-bx am">3</span></div>
+      <div class="sb-it" onclick="go('am')">&#9719; Meetings</div>
+      <div class="sb-sec">Setup</div>
+      <div class="sb-it" onclick="go('as')">&#10022; Services</div>
+      <div class="sb-it" onclick="go('ado')">&#9643; Documents</div>
+      <div class="sb-it" onclick="go('an2')">&#9680; Notifications <span class="sb-bx">5</span></div>
+      <div class="sb-it" onclick="go('al')">&#9681; Activity Log</div>
+    </div>
+    <div class="sb-nav" id="cn" style="display:none">
+      <div class="sb-sec">My Portal</div>
+      <div class="sb-it active" onclick="go('cd')">&#9635; Dashboard</div>
+      <div class="sb-it" onclick="go('cpr')">&#9672; Project Status</div>
+      <div class="sb-it" onclick="go('ci')">&#9678; Invoices</div>
+      <div class="sb-it" onclick="go('cpy')">&#9670; Payments</div>
+      <div class="sb-it" onclick="go('cm')">&#9719; Meetings</div>
+      <div class="sb-it" onclick="go('cdo')">&#9643; Documents</div>
+      <div class="sb-it" onclick="go('cc')">&#9677; Chat <span class="sb-bx">2</span></div>
+      <div class="sb-it" onclick="go('cso')">&#10022; Sign-Off</div>
+    </div>
+    <div class="sb-usr">
+      <div class="u-av" id="uav">A</div>
+      <div><div class="u-nm" id="unm">Admin</div><div class="u-rl" id="url">SUPER ADMIN</div></div>
+      <button class="u-out" onclick="doLogout()" title="Sign out">&#9167;</button>
+    </div>
+  </nav>
+
+  <div class="mn">
+    <div class="tpb">
+      <button id="mbtn" style="display:none;background:none;border:none;font-size:20px;cursor:pointer;color:var(--t3);margin-right:4px" onclick="document.getElementById('sb').classList.toggle('open')">&#9776;</button>
+      <div class="tpb-title" id="pgtitle">Dashboard</div>
+      <div class="tpb-r">
+        <button class="tb" onclick="go('an2')">&#128276; Notifications</button>
+        <button class="tb pr" id="npbtn" onclick="openM('mp')">+ New Project</button>
+      </div>
+    </div>
+    <div class="cnt">
+
+<!-- ══ ADMIN DASHBOARD ══ -->
+<div class="ps active" id="page-ad">
+  <div class="ph"><div class="pe">Super Admin</div><div class="pt">Dashboard</div></div>
+  <div class="g4">
+    <div class="stat"><div class="si" style="background:var(--teal-lt);color:var(--teal);margin-bottom:10px">&#9672;</div><div class="sn">12</div><div class="sl">Total Projects</div><div class="sm">&#8593; 3 added this month</div></div>
+    <div class="stat"><div class="si" style="background:var(--amber-bg);color:var(--amber);margin-bottom:10px">&#9719;</div><div class="sn">7</div><div class="sl">In Progress</div><div class="sm">2 approaching deadline</div></div>
+    <div class="stat"><div class="si" style="background:var(--green-bg);color:var(--green);margin-bottom:10px">&#9675;</div><div class="sn" style="font-size:22px">LKR 2.4M</div><div class="sl">Revenue YTD</div><div class="sm">&#8593; 34% vs last year</div></div>
+    <div class="stat"><div class="si" style="background:var(--red-bg);color:var(--red);margin-bottom:10px">&#9678;</div><div class="sn" style="font-size:20px">LKR 380K</div><div class="sl">Pending Payments</div><div class="sm">3 slips awaiting review</div></div>
+  </div>
+  <div class="g21">
+    <div class="card">
+      <div class="chd"><div><div class="ct">Revenue — 2025</div><div class="cs">Monthly overview (LKR)</div></div></div>
+      <div class="cha">
+        <div class="cbs">
+          <div class="cb" style="height:45%" title="Jan: 180K"></div>
+          <div class="cb" style="height:62%" title="Feb: 248K"></div>
+          <div class="cb" style="height:55%" title="Mar: 220K"></div>
+          <div class="cb" style="height:80%" title="Apr: 320K"></div>
+          <div class="cb hi" style="height:95%" title="May: 380K"></div>
+          <div class="cb" style="height:38%" title="Jun: 152K (ongoing)"></div>
+        </div>
+        <div class="cxl"><div class="cx">JAN</div><div class="cx">FEB</div><div class="cx">MAR</div><div class="cx">APR</div><div class="cx">MAY</div><div class="cx">JUN</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ct">Recent Activity</div></div>
+      <div class="aci"><div class="acd" style="background:var(--green)"></div><div><div class="act">Payment approved &middot; <b>Perera Holdings</b></div><div class="acm">2 min ago</div></div></div>
+      <div class="aci"><div class="acd" style="background:var(--teal)"></div><div><div class="act">NVF-2025-004 moved to <b>Development</b></div><div class="acm">18 min ago</div></div></div>
+      <div class="aci"><div class="acd" style="background:var(--amber)"></div><div><div class="act">Payment slip uploaded &middot; <b>SLT Mobitel</b></div><div class="acm">1 hr ago</div></div></div>
+      <div class="aci"><div class="acd" style="background:var(--blue)"></div><div><div class="act">Meeting scheduled &middot; <b>Jun 15, 10:00 AM</b></div><div class="acm">3 hrs ago</div></div></div>
+      <div class="aci"><div class="acd" style="background:var(--t4)"></div><div><div class="act">Invoice INV-2025-009 generated</div><div class="acm">Yesterday</div></div></div>
+    </div>
+  </div>
+  <div class="tw">
+    <div class="th"><span class="tht">Active Projects</span><span class="b bt">7 active</span><button class="btn btn-sm btn-s" style="margin-left:auto" onclick="go('ap')">View all &rarr;</button></div>
+    <table class="dt">
+      <thead><tr><th>Code</th><th>Client</th><th>Service</th><th>Stage</th><th>Progress</th><th>Risk</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">NVF-2025-001</span></td><td><b>Perera Holdings</b></td><td>Smart Business ERP</td><td><span class="b bbl">Development</span></td><td><div style="min-width:90px"><div class="pw"><div class="pb" style="width:68%"></div></div><div style="font-size:10px;color:var(--t4);margin-top:2px">68%</div></div></td><td><span class="risk rl">Low</span></td><td><button class="btn btn-sm btn-s" onclick="go('ap')">View</button></td></tr>
+        <tr><td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">NVF-2025-002</span></td><td><b>Silva Auto Parts</b></td><td>Growth Website</td><td><span class="b bam">Client Review</span></td><td><div style="min-width:90px"><div class="pw"><div class="pb" style="width:85%"></div></div><div style="font-size:10px;color:var(--t4);margin-top:2px">85%</div></div></td><td><span class="risk rl">Low</span></td><td><button class="btn btn-sm btn-s" onclick="go('ap')">View</button></td></tr>
+        <tr><td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">NVF-2025-004</span></td><td><b>Bandara Enterprises</b></td><td>Enterprise AI ERP</td><td><span class="b bbl">Design Phase</span></td><td><div style="min-width:90px"><div class="pw"><div class="pb" style="width:42%"></div></div><div style="font-size:10px;color:var(--t4);margin-top:2px">42%</div></div></td><td><span class="risk rm">Medium</span></td><td><button class="btn btn-sm btn-s" onclick="go('ap')">View</button></td></tr>
+        <tr><td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">NVF-2025-005</span></td><td><b>FinTech Solutions LK</b></td><td>Business Pro Website</td><td><span class="b br">Advance Pending</span></td><td><div style="min-width:90px"><div class="pw"><div class="pb" style="width:15%"></div></div><div style="font-size:10px;color:var(--t4);margin-top:2px">15%</div></div></td><td><span class="risk rh">High</span></td><td><button class="btn btn-sm btn-s" onclick="go('ap')">View</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="chd"><div class="ct">Upcoming Meetings</div><button class="btn btn-sm btn-s" onclick="go('am')">View all</button></div>
+      <div class="mtg"><div class="md"><div class="mdy">15</div><div class="mmo">Jun</div></div><div class="mi"><div class="mt">ERP Kickoff &middot; Perera Holdings</div><div class="mtm">10:00 AM &middot; 60 min &middot; Google Meet</div><div class="mag">Scope review, timeline</div></div><button class="mjn" onclick="alert('Opening Google Meet...')">Join</button></div>
+      <div class="mtg"><div class="md"><div class="mdy">18</div><div class="mmo">Jun</div></div><div class="mi"><div class="mt">Design Review &middot; Silva Auto</div><div class="mtm">2:30 PM &middot; 45 min &middot; Zoom</div><div class="mag">Mockup review and feedback</div></div><button class="mjn" onclick="alert('Opening Zoom...')">Join</button></div>
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ct">Payment Slips Pending</div><span class="b bam">3 pending</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:600">SLT Mobitel</div><div style="font-size:11px;color:var(--t3)">LKR 49,500 &middot; Jun 12</div></div><div style="display:flex;gap:6px"><button class="btn btn-sm btn-ok">Approve</button><button class="btn btn-sm btn-no">Reject</button></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:600">Colombo Medicals</div><div style="font-size:11px;color:var(--t3)">LKR 24,500 &middot; Jun 11</div></div><div style="display:flex;gap:6px"><button class="btn btn-sm btn-ok">Approve</button><button class="btn btn-sm btn-no">Reject</button></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0"><div><div style="font-size:13px;font-weight:600">Bandara Enterprises</div><div style="font-size:11px;color:var(--t3)">LKR 175,000 &middot; Jun 10</div></div><div style="display:flex;gap:6px"><button class="btn btn-sm btn-ok">Approve</button><button class="btn btn-sm btn-no">Reject</button></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN PROJECTS ══ -->
+<div class="ps" id="page-ap">
+  <div class="ph"><div class="pe">Management</div><div class="pt">Projects</div></div>
+  <div style="display:flex;gap:9px;margin-bottom:18px;flex-wrap:wrap">
+    <button class="btn btn-p" onclick="openM('mp')">+ Create Project</button>
+    <button class="btn btn-s">Export</button>
+    <select class="fin" style="width:150px"><option>All Status</option><option>In Progress</option><option>Completed</option></select>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:18px;align-items:start">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);margin-bottom:3px">NVF-2025-001</div>
+        <div style="font-size:18px;font-weight:800;letter-spacing:-.3px;margin-bottom:2px">Smart Business ERP</div>
+        <div style="font-size:13px;color:var(--t3);margin-bottom:9px">Perera Holdings Ltd</div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap"><span class="b bbl">Development</span><span class="risk rl">Low Risk</span></div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace;margin-bottom:2px">PROJECT MANAGER</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:9px">Kusagra Rambukwella</div>
+        <div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace;margin-bottom:2px">SERVICE</div>
+        <div style="font-size:13px;color:var(--t2)">Smart Business ERP &middot; LKR 349,000</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace;margin-bottom:7px">PROGRESS</div>
+        <div style="font-size:34px;font-weight:800;color:var(--teal);letter-spacing:-.5px">68%</div>
+        <div class="pw" style="height:6px;margin-top:5px"><div class="pb" style="width:68%"></div></div>
+        <div style="font-size:11px;color:var(--t4);margin-top:4px">Stage 8 of 18 &middot; Est. Aug 30 2025</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn btn-p btn-sm">Update Stage</button>
+        <button class="btn btn-s btn-sm">Add Note</button>
+        <button class="btn btn-s btn-sm">Schedule Meeting</button>
+        <button class="btn btn-s btn-sm">Generate Invoice</button>
+      </div>
+    </div>
+  </div>
+  <div class="g21">
+    <div class="card">
+      <div class="chd"><div class="ct">Project Timeline &mdash; 18 Stages</div><span class="b bbl">Stage 8 Active</span></div>
+      <div class="tl">
+        <div class="tli"><div class="tld dn"></div><div class="tlc"><div class="tlnum">STAGE 01</div><div class="tlnm">Inquiry Received</div><div class="tldt">&#10003; Completed &middot; Mar 1, 2025</div></div></div>
+        <div class="tli"><div class="tld dn"></div><div class="tlc"><div class="tlnum">STAGE 02</div><div class="tlnm">Information Gathering</div><div class="tldt">&#10003; Completed &middot; Mar 5, 2025</div></div></div>
+        <div class="tli"><div class="tld dn"></div><div class="tlc"><div class="tlnum">STAGE 03</div><div class="tlnm">Proposal Submitted</div><div class="tldt">&#10003; Completed &middot; Mar 10, 2025</div></div></div>
+        <div class="tli"><div class="tld dn"></div><div class="tlc"><div class="tlnum">STAGES 04 &ndash; 05</div><div class="tlnm">Advance Payment Received</div><div class="tldt">&#10003; LKR 174,500 &middot; Mar 15, 2025</div></div></div>
+        <div class="tli"><div class="tld dn"></div><div class="tlc"><div class="tlnum">STAGE 06</div><div class="tlnm">Project Kickoff Meeting</div><div class="tldt">&#10003; Mar 20, 2025</div></div></div>
+        <div class="tli"><div class="tld dn"></div><div class="tlc"><div class="tlnum">STAGE 07</div><div class="tlnm">Design Phase</div><div class="tldt">&#10003; Completed &middot; Apr 10, 2025</div></div></div>
+        <div class="tli"><div class="tld ac"></div><div class="tlc tlca"><div class="tlnum">STAGE 08 &middot; ACTIVE</div><div class="tlnm">Development Phase</div><div class="tldt">In Progress &middot; Started May 1, 2025</div><div class="tlnt">Backend 60% complete. React frontend in progress. DB schema finalised.</div></div></div>
+        <div class="tli"><div class="tld"></div><div class="tlc" style="opacity:.45"><div class="tlnum">STAGE 09</div><div class="tlnm">Internal Testing</div><div class="tldt">Est. Jul 15, 2025</div></div></div>
+        <div class="tli"><div class="tld"></div><div class="tlc" style="opacity:.45"><div class="tlnum">STAGES 10 &ndash; 18</div><div class="tlnm">Review &rarr; Testing &rarr; Deployment &rarr; Sign-Off</div><div class="tldt">Est. Aug 30, 2025</div></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="chd"><div class="ct">Project Health</div></div>
+        <div style="text-align:center;padding:6px 0 12px">
+          <div style="position:relative;display:inline-flex;align-items:center;justify-content:center">
+            <svg width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="var(--border)" stroke-width="9"/><circle cx="50" cy="50" r="38" fill="none" stroke="var(--teal)" stroke-width="9" stroke-dasharray="238.8" stroke-dashoffset="76.4" stroke-linecap="round" transform="rotate(-90 50 50)"/></svg>
+            <div style="position:absolute;font-size:18px;font-weight:800;color:var(--text)">68%</div>
+          </div>
+          <div style="font-size:12px;color:var(--t3);margin-top:3px">Health Score</div><span class="b bg" style="margin-top:5px">On Track</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--t3)">Timeline</span><span style="color:var(--green);font-weight:600">On Time</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--t3)">Budget</span><span style="color:var(--green);font-weight:600">Within Budget</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--t3)">Client Rating</span><span style="font-weight:600">4.8 / 5 &#9733;</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--t3)">Risk Level</span><span class="risk rl" style="font-size:10px;padding:2px 7px">Low</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="chd"><div class="ct">Payment Summary</div></div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-.3px;margin-bottom:12px">LKR 349,000</div>
+        <div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="color:var(--t3)">50% Advance</span><span style="color:var(--green);font-weight:600">LKR 174,500 &#10003;</span></div><div class="pw"><div class="pb" style="width:50%;background:var(--green)"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="color:var(--t3)">50% Balance</span><span style="color:var(--amber);font-weight:600">LKR 174,500 pending</span></div><div class="pw"><div class="pb" style="width:0%"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN CLIENTS ══ -->
+<div class="ps" id="page-ac">
+  <div class="ph"><div class="pe">Management</div><div class="pt">Clients</div></div>
+  <div style="display:flex;gap:9px;margin-bottom:18px"><button class="btn btn-p" onclick="openM('mc')">+ Add Client</button><button class="btn btn-s">Export</button></div>
+  <div class="tw">
+    <div class="th"><span class="tht">Client Directory</span><span class="b bt">8 clients</span></div>
+    <table class="dt">
+      <thead><tr><th>Company</th><th>Contact</th><th>Projects</th><th>Total Value</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><div style="font-weight:600">Perera Holdings Ltd</div><div style="font-size:11px;color:var(--t4)">Enterprise</div></td><td><div>Kavindu Perera</div><div style="font-size:11px;color:var(--t3)">+94 77 123 4567</div></td><td><span class="b bbl">2 active</span></td><td style="font-weight:600">LKR 528,000</td><td><span class="b bg">Active</span></td><td><button class="btn btn-sm btn-s">View</button></td></tr>
+        <tr><td><div style="font-weight:600">Silva Auto Parts</div><div style="font-size:11px;color:var(--t4)">SME</div></td><td><div>Dilki Silva</div><div style="font-size:11px;color:var(--t3)">+94 71 987 6543</div></td><td><span class="b bt">1 active</span></td><td style="font-weight:600">LKR 49,900</td><td><span class="b bg">Active</span></td><td><button class="btn btn-sm btn-s">View</button></td></tr>
+        <tr><td><div style="font-weight:600">Bandara Enterprises</div><div style="font-size:11px;color:var(--t4)">Enterprise</div></td><td><div>Nuwan Bandara</div><div style="font-size:11px;color:var(--t3)">+94 70 456 7890</div></td><td><span class="b bbl">1 active</span></td><td style="font-weight:600">LKR 750,000</td><td><span class="b bg">Active</span></td><td><button class="btn btn-sm btn-s">View</button></td></tr>
+        <tr><td><div style="font-weight:600">FinTech Solutions LK</div><div style="font-size:11px;color:var(--t4)">Startup</div></td><td><div>Ashan Fernando</div><div style="font-size:11px;color:var(--t3)">+94 76 234 5678</div></td><td><span class="b bam">1 pending</span></td><td style="font-weight:600">LKR 89,900</td><td><span class="b bam">Pending</span></td><td><button class="btn btn-sm btn-s">View</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ ADMIN INVOICES ══ -->
+<div class="ps" id="page-ai">
+  <div class="ph"><div class="pe">Finance</div><div class="pt">Invoices</div></div>
+  <div style="display:flex;gap:9px;margin-bottom:18px"><button class="btn btn-p" onclick="openM('mi')">+ Create Invoice</button><button class="btn btn-s">Export PDF</button></div>
+  <div class="ivc">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+      <div><div class="ivn">INV-2025-009</div><div style="font-size:15px;font-weight:600">Perera Holdings Ltd</div><div style="font-size:12px;color:var(--t3)">Smart Business ERP &middot; NVF-2025-001 &middot; Due Jun 30</div></div>
+      <div style="text-align:right"><div class="iva">LKR 411,820 <small>incl. VAT</small></div><span class="b bam" style="margin-top:5px">Partially Paid</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:var(--bg);border-radius:var(--rs);padding:12px;margin-bottom:12px">
+      <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">SUBTOTAL</div><div style="font-size:14px;font-weight:600;margin-top:2px">LKR 349,000</div></div>
+      <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">DISCOUNT</div><div style="font-size:14px;font-weight:600;color:var(--green);margin-top:2px">LKR 0</div></div>
+      <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">VAT 18%</div><div style="font-size:14px;font-weight:600;margin-top:2px">LKR 62,820</div></div>
+      <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">TOTAL</div><div style="font-size:14px;font-weight:700;color:var(--teal);margin-top:2px">LKR 411,820</div></div>
+    </div>
+    <div style="display:flex;gap:7px"><button class="btn btn-p btn-sm">Download PDF</button><button class="btn btn-s btn-sm">Send to Client</button><button class="btn btn-s btn-sm">Edit</button></div>
+  </div>
+  <div class="ivc">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+      <div><div class="ivn">INV-2025-008</div><div style="font-size:15px;font-weight:600">Silva Auto Parts</div><div style="font-size:12px;color:var(--t3)">Growth Website &middot; NVF-2025-002</div></div>
+      <div style="text-align:right"><div class="iva">LKR 49,900</div><span class="b bg" style="margin-top:5px">Fully Paid</span></div>
+    </div>
+    <div style="display:flex;gap:7px"><button class="btn btn-p btn-sm">Download PDF</button><button class="btn btn-s btn-sm">Send to Client</button></div>
+  </div>
+</div>
+
+<!-- ══ ADMIN PAYMENTS ══ -->
+<div class="ps" id="page-apy">
+  <div class="ph"><div class="pe">Finance</div><div class="pt">Payment Verification</div></div>
+  <div class="g3">
+    <div class="stat"><div class="sn" style="font-size:20px;color:var(--green)">LKR 2.04M</div><div class="sl">Total Received</div></div>
+    <div class="stat"><div class="sn" style="font-size:20px;color:var(--amber)">LKR 248K</div><div class="sl">Pending Slips</div></div>
+    <div class="stat"><div class="sn" style="font-size:20px;color:var(--red)">LKR 380K</div><div class="sl">Outstanding Balance</div></div>
+  </div>
+  <div class="tw">
+    <div class="th"><span class="tht">Slips Awaiting Approval</span><span class="b bam">3 pending</span></div>
+    <table class="dt">
+      <thead><tr><th>Client</th><th>Project</th><th>Amount</th><th>Type</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr><td><b>SLT Mobitel</b></td><td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">NVF-2025-006</span></td><td style="font-weight:600">LKR 49,500</td><td>Bank Transfer</td><td>Jun 12, 2025</td><td><span class="b bam">Pending</span></td><td><div style="display:flex;gap:5px"><button class="btn btn-sm btn-ok">Approve</button><button class="btn btn-sm btn-no">Reject</button><button class="btn btn-sm btn-s">View</button></div></td></tr>
+        <tr><td><b>Colombo Medicals</b></td><td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">NVF-2025-003</span></td><td style="font-weight:600">LKR 24,500</td><td>Bank Slip</td><td>Jun 11, 2025</td><td><span class="b bam">Pending</span></td><td><div style="display:flex;gap:5px"><button class="btn btn-sm btn-ok">Approve</button><button class="btn btn-sm btn-no">Reject</button><button class="btn btn-sm btn-s">View</button></div></td></tr>
+        <tr><td><b>Bandara Enterprises</b></td><td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">NVF-2025-004</span></td><td style="font-weight:600">LKR 175,000</td><td>Online Transfer</td><td>Jun 10, 2025</td><td><span class="b bam">Pending</span></td><td><div style="display:flex;gap:5px"><button class="btn btn-sm btn-ok">Approve</button><button class="btn btn-sm btn-no">Reject</button><button class="btn btn-sm btn-s">View</button></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ ADMIN MEETINGS ══ -->
+<div class="ps" id="page-am">
+  <div class="ph"><div class="pe">Scheduling</div><div class="pt">Meetings</div></div>
+  <div style="display:flex;gap:9px;margin-bottom:18px"><button class="btn btn-p" onclick="openM('mmtg')">+ Schedule Meeting</button></div>
+  <div class="g2">
+    <div>
+      <div class="mtg"><div class="md"><div class="mdy">15</div><div class="mmo">Jun</div></div><div class="mi"><div class="mt">ERP Kickoff &middot; Perera Holdings</div><div class="mtm">10:00&ndash;11:00 AM &middot; Google Meet</div><div class="mag">NVF-2025-001 &middot; Scope review</div></div><button class="mjn" onclick="alert('Opening Google Meet...')">Join</button></div>
+      <div class="mtg"><div class="md"><div class="mdy">18</div><div class="mmo">Jun</div></div><div class="mi"><div class="mt">Design Review &middot; Silva Auto</div><div class="mtm">2:30&ndash;3:15 PM &middot; Zoom</div><div class="mag">NVF-2025-002 &middot; Mockup review</div></div><button class="mjn" onclick="alert('Opening Zoom...')">Join</button></div>
+      <div class="mtg"><div class="md"><div class="mdy">22</div><div class="mmo">Jun</div></div><div class="mi"><div class="mt">Client Onboarding &middot; Bandara</div><div class="mtm">9:00&ndash;9:30 AM &middot; Teams</div><div class="mag">NVF-2025-004 &middot; System walkthrough</div></div><button class="mjn" onclick="alert('Opening Teams...')">Join</button></div>
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ct">Quick Schedule</div></div>
+      <div class="fgp"><label class="flb">Title</label><input class="fin" placeholder="e.g. Project Kickoff"></div>
+      <div class="fr"><div class="fgp" style="margin:0"><label class="flb">Date</label><input class="fin" type="date"></div><div class="fgp" style="margin:0"><label class="flb">Time</label><input class="fin" type="time"></div></div>
+      <div style="height:12px"></div>
+      <div class="fgp"><label class="flb">Platform</label><select class="fin"><option>Google Meet</option><option>Zoom</option><option>Microsoft Teams</option></select></div>
+      <div class="fgp"><label class="flb">Meeting Link</label><input class="fin" placeholder="https://meet.google.com/..."></div>
+      <div class="fgp"><label class="flb">Agenda</label><textarea class="fin" placeholder="Meeting agenda..."></textarea></div>
+      <button class="btn btn-p" style="width:100%" onclick="alert('Meeting scheduled. Client notified.')">Schedule &amp; Notify Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN SERVICES ══ -->
+<div class="ps" id="page-as">
+  <div class="ph"><div class="pe">Setup</div><div class="pt">Service Catalogue</div></div>
+  <div style="display:flex;gap:9px;margin-bottom:18px"><button class="btn btn-p">+ Add Service</button></div>
+  <div class="tabs"><div class="tab active">Websites</div><div class="tab">Marketing</div><div class="tab">ERP &amp; AI Systems</div></div>
+  <div class="g3">
+    <div class="svc"><div class="svct">Starter &middot; One-Time</div><div class="svcn">Starter Website</div><div class="svcp">LKR 29,000 <span>fixed</span></div><ul class="svcf"><li>5-Page Responsive Website</li><li>Mobile-Optimised Design</li><li>Basic SEO &amp; Lead Forms</li><li>WhatsApp Integration</li><li>Hosting Support</li></ul><div style="display:flex;gap:6px"><button class="btn btn-sm btn-s">Edit</button><button class="btn btn-sm btn-no">Disable</button></div></div>
+    <div class="svc ft"><div class="fbd">Most Popular</div><div class="svct">Growth &middot; One-Time</div><div class="svcn">Growth Website</div><div class="svcp">LKR 49,900 <span>fixed</span></div><ul class="svcf"><li>Up to 10-Page Custom Website</li><li>Advanced SEO</li><li>AI Chatbot for Lead Capture</li><li>Booking / Inquiry Systems</li><li>Priority Support</li></ul><div style="display:flex;gap:6px"><button class="btn btn-sm btn-s">Edit</button><button class="btn btn-sm btn-no">Disable</button></div></div>
+    <div class="svc"><div class="svct">Pro &middot; One-Time</div><div class="svcn">Business Pro Website</div><div class="svcp">LKR 89,900 <span>fixed</span></div><ul class="svcf"><li>Unlimited Pages + E-Commerce</li><li>Full SEO + CRM Integration</li><li>AI Chatbot + Smart Routing</li><li>Advanced Analytics</li><li>Dedicated Account Manager</li></ul><div style="display:flex;gap:6px"><button class="btn btn-sm btn-s">Edit</button><button class="btn btn-sm btn-no">Disable</button></div></div>
+  </div>
+</div>
+
+<!-- ══ ADMIN DOCUMENTS ══ -->
+<div class="ps" id="page-ado">
+  <div class="ph"><div class="pe">Setup</div><div class="pt">Documents</div></div>
+  <div class="upz" style="margin-bottom:18px" onclick="alert('File picker opens here')"><div class="upico">&#128206;</div><div class="uptx">Drop files or click to upload</div><div class="upsb">PDF, DOCX, PNG, ZIP &middot; Max 25MB</div></div>
+  <div class="doc"><div class="dico">&#128196;</div><div><div class="dnm">NVF-2025-001 Proposal v2.pdf</div><div class="dmt">Perera Holdings &middot; Jun 1, 2025</div></div><span class="b bg">Approved</span><div class="dsz">2.4 MB</div><button class="btn btn-sm btn-s" style="margin-left:8px">&#8595;</button></div>
+  <div class="doc"><div class="dico">&#128203;</div><div><div class="dnm">Smart Business ERP Contract.pdf</div><div class="dmt">Perera Holdings &middot; Mar 10, 2025</div></div><span class="b bg">Signed</span><div class="dsz">1.1 MB</div><button class="btn btn-sm btn-s" style="margin-left:8px">&#8595;</button></div>
+  <div class="doc"><div class="dico">&#128202;</div><div><div class="dnm">Design Files ERP Dashboard v3.zip</div><div class="dmt">NVF-2025-001 &middot; May 20, 2025</div></div><span class="b bgr">Internal</span><div class="dsz">18.4 MB</div><button class="btn btn-sm btn-s" style="margin-left:8px">&#8595;</button></div>
+</div>
+
+<!-- ══ ADMIN NOTIFICATIONS ══ -->
+<div class="ps" id="page-an2">
+  <div class="ph"><div class="pe">System</div><div class="pt">Notifications</div></div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="nfi unr"><div class="nico" style="background:var(--amber-bg)">&#128179;</div><div><div class="ntx"><b>SLT Mobitel</b> uploaded a payment slip &mdash; LKR 49,500 awaiting review</div><div class="nmt">2 min ago &middot; Action Required</div></div><span class="b bam" style="margin-left:auto;flex-shrink:0">Review</span></div>
+    <div class="nfi unr"><div class="nico" style="background:var(--teal-lt)">&#128202;</div><div><div class="ntx">Milestone approved by <b>Perera Holdings</b> &mdash; Design Phase complete</div><div class="nmt">1 hour ago</div></div></div>
+    <div class="nfi unr"><div class="nico" style="background:var(--blue-bg)">&#128197;</div><div><div class="ntx">Meeting reminder: ERP Kickoff on Jun 15 at 10:00 AM</div><div class="nmt">3 hours ago</div></div></div>
+    <div class="nfi"><div class="nico" style="background:var(--green-bg)">&#10003;</div><div><div class="ntx">Invoice INV-2025-008 fully paid by <b>Silva Auto Parts</b></div><div class="nmt">Yesterday &middot; 3:45 PM</div></div></div>
+    <div class="nfi"><div class="nico" style="background:var(--red-bg)">&#9888;</div><div><div class="ntx"><b>FinTech Solutions LK</b> advance payment overdue &mdash; 5 days</div><div class="nmt">Yesterday &middot; 9:00 AM</div></div></div>
+  </div>
+</div>
+
+<!-- ══ ADMIN ACTIVITY ══ -->
+<div class="ps" id="page-al">
+  <div class="ph"><div class="pe">System</div><div class="pt">Activity Log</div></div>
+  <div class="tw">
+    <div class="th"><span class="tht">Audit Trail</span></div>
+    <table class="dt">
+      <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Module</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr><td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3)">2025-06-12 14:32</td><td>admin</td><td><span class="b bg">APPROVED</span></td><td>Payments</td><td style="font-size:12px;color:var(--t3)">Perera Holdings &middot; LKR 174,500</td></tr>
+        <tr><td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3)">2025-06-12 11:15</td><td>admin</td><td><span class="b bbl">UPDATED</span></td><td>Projects</td><td style="font-size:12px;color:var(--t3)">NVF-2025-001 stage &rarr; Development Phase</td></tr>
+        <tr><td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3)">2025-06-11 09:22</td><td>admin</td><td><span class="b bt">CREATED</span></td><td>Invoices</td><td style="font-size:12px;color:var(--t3)">Invoice INV-2025-009 generated for Perera Holdings</td></tr>
+        <tr><td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3)">2025-06-10 16:45</td><td>client</td><td><span class="b bbl">UPLOADED</span></td><td>Payments</td><td style="font-size:12px;color:var(--t3)">Payment slip &middot; LKR 49,900</td></tr>
+        <tr><td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3)">2025-06-09 10:00</td><td>admin</td><td><span class="b bam">SCHEDULED</span></td><td>Meetings</td><td style="font-size:12px;color:var(--t3)">Meeting Jun 15 10:00 AM &middot; Perera Holdings</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ CLIENT DASHBOARD ══ -->
+<div class="ps" id="page-cd">
+  <div class="ph"><div class="pe">Welcome back, Kavindu</div><div class="pt">Your Project Portal</div><div class="ps2">Track progress, upload payments, and stay in touch with your team.</div></div>
+  <div class="g4">
+    <div class="stat" style="cursor:pointer;border-color:var(--teal-md)" onclick="go('cpy')"><div class="si" style="background:var(--teal-lt);color:var(--teal);margin-bottom:9px">&#8593;</div><div style="font-size:14px;font-weight:600">Upload Payment</div><div style="font-size:11px;color:var(--t3);margin-top:2px">Balance: LKR 174,500</div></div>
+    <div class="stat" style="cursor:pointer" onclick="go('cm')"><div class="si" style="background:var(--blue-bg);color:var(--blue);margin-bottom:9px">&#128197;</div><div style="font-size:14px;font-weight:600">Join Meeting</div><div style="font-size:11px;color:var(--t3);margin-top:2px">Jun 15 &middot; 10:00 AM</div></div>
+    <div class="stat" style="cursor:pointer" onclick="go('ci')"><div class="si" style="background:var(--green-bg);color:var(--green);margin-bottom:9px">&#8595;</div><div style="font-size:14px;font-weight:600">Download Invoice</div><div style="font-size:11px;color:var(--t3);margin-top:2px">INV-2025-009</div></div>
+    <div class="stat" style="cursor:pointer" onclick="go('cc')"><div class="si" style="background:var(--amber-bg);color:var(--amber);margin-bottom:9px">&#128172;</div><div style="font-size:14px;font-weight:600">Contact Team</div><div style="font-size:11px;color:var(--t3);margin-top:2px">2 unread messages</div></div>
+  </div>
+  <div class="g21">
+    <div class="card">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);margin-bottom:3px">NVF-2025-001</div>
+      <div style="font-size:19px;font-weight:800;letter-spacing:-.3px;margin-bottom:2px">Smart Business ERP</div>
+      <div style="font-size:13px;color:var(--t3);margin-bottom:9px">ERP &middot; AI Business System</div>
+      <span class="b bbl">Development Phase</span>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--bg);border-radius:var(--rs);padding:11px;margin:14px 0">
+        <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">PM</div><div style="font-size:13px;font-weight:600;margin-top:2px">Kusagra R.</div></div>
+        <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">STARTED</div><div style="font-size:13px;font-weight:600;margin-top:2px">Mar 1, 2025</div></div>
+        <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">EST. DONE</div><div style="font-size:13px;font-weight:600;margin-top:2px">Aug 30, 2025</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><span style="font-size:13px;color:var(--t3)">Overall Progress</span><span style="font-size:24px;font-weight:800;color:var(--teal);letter-spacing:-.3px">68%</span></div>
+      <div class="pw" style="height:7px"><div class="pb" style="width:68%"></div></div>
+      <div style="font-size:11px;color:var(--t4);margin-top:5px">Stage 8 of 18 &middot; On Schedule</div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="chd"><div class="ct">Payment Summary</div></div>
+        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t3)">Total</span><span style="font-weight:600">LKR 349,000</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t3)">Advance Paid</span><span style="color:var(--green);font-weight:600">LKR 174,500 &#10003;</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t3)">Balance Due</span><span style="color:var(--amber);font-weight:600">LKR 174,500</span></div>
+        </div>
+        <button class="btn btn-p btn-sm" style="width:100%" onclick="go('cpy')">Upload Payment Slip &rarr;</button>
+      </div>
+      <div class="card">
+        <div class="chd"><div class="ct">Next Meeting</div></div>
+        <div class="mtg" style="margin:0"><div class="md"><div class="mdy">15</div><div class="mmo">Jun</div></div><div class="mi"><div class="mt">ERP Progress Review</div><div class="mtm">10:00 AM &middot; Google Meet</div></div><button class="mjn" onclick="alert('Opening Google Meet...')">Join</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="chd"><div class="ct">Recent Updates from Your Team</div></div>
+    <div class="aci"><div class="acd" style="background:var(--teal)"></div><div><div class="act">Design Phase <b>completed</b>. All UI/UX mockups approved. Development is underway.</div><div class="acm">Jun 10, 2025</div></div></div>
+    <div class="aci"><div class="acd" style="background:var(--green)"></div><div><div class="act">Advance payment of <b>LKR 174,500</b> confirmed and recorded.</div><div class="acm">Mar 15, 2025</div></div></div>
+    <div class="aci"><div class="acd" style="background:var(--blue)"></div><div><div class="act">Project Kickoff completed. Scope and timeline finalised.</div><div class="acm">Mar 20, 2025</div></div></div>
+  </div>
+</div>
+
+<!-- ══ CLIENT PROJECT STATUS ══ -->
+<div class="ps" id="page-cpr">
+  <div class="ph"><div class="pe">NVF-2025-001</div><div class="pt">Project Timeline</div></div>
+  <div class="g21">
+    <div class="card">
+      <div class="chd"><div class="ct">18-Stage Journey</div><span class="b bbl">Stage 8 Active</span></div>
+      <div class="tl">
+        <div class="tli"><div class="tld dn"></div><div class="tlc"><div class="tlnum">STAGE 01</div><div class="tlnm">Inquiry Received</div><div class="tldt">&#10003; Mar 1, 2025</div></div></div>
+        <div class="tli"><div class="tld dn"></div><div class="tlc"><div class="tlnum">STAGE 02</div><div class="tlnm">Information Gathering</div><div class="tldt">&#10003; Mar 5, 2025</div></div></div>
+        <div class="tli"><div class="tld dn"></div><div class="tlc"><div class="tlnum">STAGE 03</div><div class="tlnm">Proposal Submitted</div><div class="tldt">&#10003; Mar 10, 2025</div></div></div>
+        <div class="tli"><div class="tld dn"></div><div class="tlc"><div class="tlnum">STAGES 04 &ndash; 05</div><div class="tlnm">Advance Payment Received</div><div class="tldt">&#10003; LKR 174,500 &middot; Mar 15</div></div></div>
+        <div class="tli"><div class="tld dn"></div><div class="tlc"><div class="tlnum">STAGE 06</div><div class="tlnm">Project Kickoff Meeting</div><div class="tldt">&#10003; Mar 20, 2025</div></div></div>
+        <div class="tli"><div class="tld dn"></div><div class="tlc"><div class="tlnum">STAGE 07</div><div class="tlnm">Design Phase</div><div class="tldt">&#10003; Completed &middot; Apr 10</div></div></div>
+        <div class="tli"><div class="tld ac"></div><div class="tlc tlca"><div class="tlnum">STAGE 08 &middot; CURRENT</div><div class="tlnm">Development Phase</div><div class="tldt">In Progress &middot; Started May 1</div><div class="tlnt">Your ERP is being built. Backend 60% complete. Expect first review in ~3 weeks.</div></div></div>
+        <div class="tli"><div class="tld"></div><div class="tlc" style="opacity:.4"><div class="tlnum">STAGE 09</div><div class="tlnm">Internal Testing</div><div class="tldt">Est. Jul 15, 2025</div></div></div>
+        <div class="tli"><div class="tld"></div><div class="tlc" style="opacity:.4"><div class="tlnum">STAGE 10</div><div class="tlnm">Client Review Round 1</div><div class="tldt">Est. Jul 30, 2025</div></div></div>
+        <div class="tli"><div class="tld"></div><div class="tlc" style="opacity:.4"><div class="tlnum">STAGES 11 &ndash; 18</div><div class="tlnm">Revisions &rarr; Testing &rarr; Deployment &rarr; Sign-Off</div><div class="tldt">Est. Aug 30, 2025</div></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="chd"><div class="ct">Milestone Approval</div></div>
+        <div style="background:var(--teal-lt);border:1px solid var(--teal-md);border-radius:var(--rs);padding:12px;margin-bottom:9px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:3px">Design Phase Sign-Off</div>
+          <div style="font-size:12px;color:var(--t3);margin-bottom:9px">All UI/UX designs completed. Approve to allow development to proceed.</div>
+          <div style="display:flex;gap:6px"><button class="btn btn-sm btn-ok" onclick="alert('Milestone approved! Team notified.')">Approve</button><button class="btn btn-sm btn-s">Request Changes</button></div>
+        </div>
+        <div style="background:var(--green-bg);border-radius:var(--rs);padding:9px;font-size:12px;color:var(--green);font-weight:600">&#10003; Proposal approved &mdash; Mar 10, 2025</div>
+      </div>
+      <div class="card">
+        <div class="chd"><div class="ct">Rate Your Experience</div></div>
+        <div style="font-size:12px;color:var(--t3);margin-bottom:7px">How is the project going so far?</div>
+        <div class="stars" id="stars"><span class="star on" onclick="rate(1)">&#9733;</span><span class="star on" onclick="rate(2)">&#9733;</span><span class="star on" onclick="rate(3)">&#9733;</span><span class="star on" onclick="rate(4)">&#9733;</span><span class="star" onclick="rate(5)">&#9733;</span></div>
+        <div style="font-size:11px;color:var(--t4);margin-top:4px">4 / 5 &middot; Very Good</div>
+        <textarea class="fin" style="margin-top:9px" placeholder="Leave feedback for our team..."></textarea>
+        <button class="btn btn-s btn-sm" style="margin-top:7px">Submit Feedback</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CLIENT INVOICES ══ -->
+<div class="ps" id="page-ci">
+  <div class="ph"><div class="pe">Finance</div><div class="pt">Your Invoices</div></div>
+  <div class="ivc">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+      <div><div class="ivn">INV-2025-009</div><div style="font-size:15px;font-weight:600">Smart Business ERP Implementation</div><div style="font-size:12px;color:var(--t3)">NovahFalcons (PVT) Ltd &middot; Jun 1, 2025 &middot; Due Jun 30</div></div>
+      <div style="text-align:right"><div class="iva">LKR 411,820 <small>incl. VAT</small></div><span class="b bam" style="margin-top:5px">Partially Paid</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:var(--bg);border-radius:var(--rs);padding:11px;margin-bottom:12px">
+      <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">SUBTOTAL</div><div style="font-size:13px;font-weight:600;margin-top:2px">LKR 349,000</div></div>
+      <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">VAT 18%</div><div style="font-size:13px;font-weight:600;margin-top:2px">LKR 62,820</div></div>
+      <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">ADVANCE PAID</div><div style="font-size:13px;font-weight:600;color:var(--green);margin-top:2px">LKR 174,500</div></div>
+      <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">BALANCE DUE</div><div style="font-size:13px;font-weight:700;color:var(--amber);margin-top:2px">LKR 237,320</div></div>
+    </div>
+    <div style="display:flex;gap:7px"><button class="btn btn-p btn-sm">Download PDF</button><button class="btn btn-s btn-sm" onclick="go('cpy')">Upload Payment Slip</button></div>
+  </div>
+</div>
+
+<!-- ══ CLIENT PAYMENTS ══ -->
+<div class="ps" id="page-cpy">
+  <div class="ph"><div class="pe">Finance</div><div class="pt">Upload Payment Slip</div></div>
+  <div class="g2">
+    <div>
+      <div class="card" style="margin-bottom:12px;border-left:3px solid var(--amber)">
+        <div style="font-size:12px;color:var(--t3);margin-bottom:3px">Balance Outstanding</div>
+        <div style="font-size:28px;font-weight:800;color:var(--amber);letter-spacing:-.5px">LKR 237,320</div>
+        <div style="font-size:11px;color:var(--t4);margin-top:3px">Includes 18% VAT &middot; Due Jun 30, 2025</div>
+      </div>
+      <div class="card">
+        <div class="chd"><div class="ct">Submit Payment Proof</div></div>
+        <div class="fgp"><label class="flb">Payment Type</label><select class="fin"><option>Bank Transfer Slip</option><option>Online Transfer</option><option>Receipt / Screenshot</option></select></div>
+        <div class="fgp"><label class="flb">Amount Paid (LKR)</label><input class="fin" type="number" placeholder="237320"></div>
+        <div class="upz" style="margin-bottom:12px" onclick="alert('File picker opens here')"><div class="upico">&#128206;</div><div class="uptx">Upload Bank Slip or Transfer Proof</div><div class="upsb">JPG, PNG, PDF &middot; Max 5MB</div></div>
+        <div class="fgp"><label class="flb">Notes (Optional)</label><textarea class="fin" placeholder="Reference number, bank name..."></textarea></div>
+        <button class="btn btn-p" style="width:100%" onclick="alert('Payment slip submitted!\nOur team will verify within 24 hours.')">Submit Payment Slip</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ct">Payment History</div></div>
+      <div class="aci"><div class="acd" style="background:var(--green)"></div><div><div class="act"><b>LKR 174,500</b> &middot; 50% Advance &middot; Approved &#10003;</div><div class="acm">Mar 15, 2025 &middot; Bank Transfer</div></div></div>
+      <div style="height:1px;background:var(--border);margin:14px 0"></div>
+      <div style="font-size:11px;color:var(--t4);font-family:'JetBrains Mono',monospace;letter-spacing:.07em;margin-bottom:9px">OUR BANK DETAILS</div>
+      <div style="font-size:13px;color:var(--t2);line-height:2.1">Bank: <b>Sampath Bank PLC</b><br>Account: <b>NovahFalcons (PVT) Ltd</b><br>Acc No: <b>1234 5678 9012</b><br>Branch: <b>Pannipitiya</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CLIENT MEETINGS ══ -->
+<div class="ps" id="page-cm">
+  <div class="ph"><div class="pe">Scheduling</div><div class="pt">Your Meetings</div></div>
+  <div class="mtg" style="border-color:var(--teal-md);background:var(--teal-lt)">
+    <div class="md"><div class="mdy">15</div><div class="mmo">Jun</div></div>
+    <div class="mi"><div class="mt">ERP System Progress Review</div><div class="mtm">10:00 &ndash; 11:00 AM &middot; Google Meet</div><div class="mag">Development update, Q&amp;A, feedback &middot; 3 days away</div><span class="b bt" style="margin-top:5px;display:inline-flex">Upcoming</span></div>
+    <button class="mjn" onclick="alert('Opening Google Meet...')">Join Meeting</button>
+  </div>
+  <div class="mtg">
+    <div class="md" style="background:var(--t4)"><div class="mdy">20</div><div class="mmo">Mar</div></div>
+    <div class="mi"><div class="mt">Project Kickoff Meeting</div><div class="mtm">10:00 AM &middot; Google Meet &middot; 60 min</div><div class="mag">Scope alignment, timeline, team introductions</div><span class="b bg" style="margin-top:5px;display:inline-flex">Completed &#10003;</span></div>
+    <button class="btn btn-s btn-sm">View Notes</button>
+  </div>
+</div>
+
+<!-- ══ CLIENT DOCUMENTS ══ -->
+<div class="ps" id="page-cdo">
+  <div class="ph"><div class="pe">Documents</div><div class="pt">Your Files</div></div>
+  <div class="doc"><div class="dico">&#128196;</div><div><div class="dnm">Project Proposal &mdash; Smart Business ERP v2.pdf</div><div class="dmt">Approved &middot; Jun 1, 2025</div></div><span class="b bg">Approved</span><div class="dsz">2.4 MB</div><button class="btn btn-sm btn-p" style="margin-left:8px">&#8595; Download</button></div>
+  <div class="doc"><div class="dico">&#128203;</div><div><div class="dnm">Service Agreement Contract.pdf</div><div class="dmt">Signed &middot; Mar 10, 2025</div></div><span class="b bg">Signed</span><div class="dsz">1.1 MB</div><button class="btn btn-sm btn-p" style="margin-left:8px">&#8595; Download</button></div>
+  <div class="doc"><div class="dico">&#128222;</div><div><div class="dnm">Invoice INV-2025-009.pdf</div><div class="dmt">Partially Paid &middot; Jun 1, 2025</div></div><span class="b bam">Invoice</span><div class="dsz">0.5 MB</div><button class="btn btn-sm btn-p" style="margin-left:8px">&#8595; Download</button></div>
+</div>
+
+<!-- ══ CLIENT CHAT ══ -->
+<div class="ps" id="page-cc">
+  <div class="ph"><div class="pe">Communication</div><div class="pt">Team Chat</div></div>
+  <div class="chw">
+    <div class="chh">
+      <div class="u-av" style="width:28px;height:28px;font-size:10px">KR</div>
+      <div><div style="font-size:13px;font-weight:600">Kusagra Rambukwella</div><div style="font-size:11px;color:var(--green)">&#9679; Online &middot; Project Manager</div></div>
+    </div>
+    <div class="cms" id="cms">
+      <div class="msg"><div class="mav">KR</div><div><div class="mbl">Hi Kavindu! Development is going well &mdash; backend is 60% done.</div><div class="mts">Jun 10 &middot; 2:30 PM</div></div></div>
+      <div class="msg snt"><div class="mav">KP</div><div><div class="mbl">Great! When can we see the first demo?</div><div class="mts">Jun 10 &middot; 2:45 PM</div></div></div>
+      <div class="msg"><div class="mav">KR</div><div><div class="mbl">Targeting July 30 for the first client review. I&#39;ll send a meeting invite when ready.</div><div class="mts">Jun 10 &middot; 2:50 PM</div></div></div>
+    </div>
+    <div class="cia">
+      <input class="cii" id="cii" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendMsg()">
+      <button class="btn btn-p btn-sm" onclick="sendMsg()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CLIENT SIGN-OFF ══ -->
+<div class="ps" id="page-cso">
+  <div class="ph"><div class="pe">Completion</div><div class="pt">Project Sign-Off</div></div>
+  <div class="sob" style="margin-bottom:18px">
+    <div style="font-size:34px;margin-bottom:9px">&#127942;</div>
+    <div style="font-size:19px;font-weight:800;margin-bottom:5px">Sign-Off Pending Completion</div>
+    <div style="font-size:13px;color:var(--t3);max-width:400px;margin:0 auto 14px">Once all deliverables are verified, you can digitally sign off to complete the project.</div>
+    <div style="background:var(--amber-bg);border:1px solid rgba(217,119,6,.2);border-radius:var(--rs);padding:9px 15px;display:inline-flex;align-items:center;gap:7px"><span style="color:var(--amber)">&#9888;</span><span style="font-size:12px;color:var(--amber)">Project is in Stage 8. Sign-off available after Stage 17.</span></div>
+  </div>
+  <div class="card">
+    <div class="chd"><div class="ct">Completion Certificate Preview</div></div>
+    <div class="cert">
+      <div style="font-size:11px;color:var(--t4);font-family:'JetBrains Mono',monospace;letter-spacing:.12em;margin-bottom:12px;text-transform:uppercase">Certificate of Project Completion</div>
+      <div style="font-size:20px;font-weight:800;color:var(--teal);margin-bottom:5px">NovahFalcons (PVT) Ltd</div>
+      <div style="font-size:13px;color:var(--t3);margin-bottom:10px">This certifies that the following project has been successfully delivered to:</div>
+      <div style="font-size:19px;font-weight:800;margin-bottom:3px">Perera Holdings Ltd</div>
+      <div style="font-size:13px;color:var(--t3);margin-bottom:18px">Smart Business ERP &middot; NVF-2025-001</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--t4)">Date: _______________</div>
+        <div style="font-size:14px;font-weight:800;color:var(--teal)">NOVAH<span style="color:var(--text)">FALCONS</span></div>
+        <div style="font-size:11px;color:var(--t4)">Signature: _______________</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    </div><!-- /cnt -->
+  </div><!-- /mn -->
+</div><!-- /app -->
+
+<!-- MODALS -->
+<div class="mov" id="mp" onclick="if(event.target===this)closeM('mp')">
+  <div class="mod">
+    <div class="mhd"><div class="mtt">Create New Project</div><button class="mcl" onclick="closeM('mp')">&#10005;</button></div>
+    <div class="fr"><div class="fgp" style="margin:0"><label class="flb">Client</label><select class="fin"><option>Perera Holdings Ltd</option><option>New Client&#8230;</option></select></div><div class="fgp" style="margin:0"><label class="flb">Service</label><select class="fin"><option>Smart Business ERP</option><option>Growth Website</option><option>Enterprise AI ERP</option></select></div></div>
+    <div style="height:12px"></div>
+    <div class="fr"><div class="fgp" style="margin:0"><label class="flb">Project Manager</label><select class="fin"><option>Kusagra Rambukwella</option><option>Leonard Bandara</option><option>Vihan Rodrigo</option></select></div><div class="fgp" style="margin:0"><label class="flb">Start Date</label><input class="fin" type="date"></div></div>
+    <div style="height:12px"></div>
+    <div class="fgp"><label class="flb">Project Value (LKR)</label><input class="fin" type="number" placeholder="349000"></div>
+    <div style="background:var(--teal-lt);border:1px solid var(--teal-md);border-radius:var(--rs);padding:9px 13px;margin-bottom:14px;font-size:12px;color:var(--t2)">&#128273; Project code auto-generated: <b style="font-family:'JetBrains Mono',monospace;color:var(--teal)">NVF-2025-013</b></div>
+    <div style="display:flex;gap:7px"><button class="btn btn-p" onclick="alert('Project created!\nCode: NVF-2025-013\nCredentials sent to client.');closeM('mp')">Create &amp; Send Access</button><button class="btn btn-s" onclick="closeM('mp')">Cancel</button></div>
+  </div>
+</div>
+
+<div class="mov" id="mi" onclick="if(event.target===this)closeM('mi')">
+  <div class="mod">
+    <div class="mhd"><div class="mtt">Create Invoice</div><button class="mcl" onclick="closeM('mi')">&#10005;</button></div>
+    <div class="fr"><div class="fgp" style="margin:0"><label class="flb">Client</label><select class="fin"><option>Perera Holdings Ltd</option></select></div><div class="fgp" style="margin:0"><label class="flb">Project</label><select class="fin"><option>NVF-2025-001</option></select></div></div>
+    <div style="height:12px"></div>
+    <div class="fr"><div class="fgp" style="margin:0"><label class="flb">Subtotal (LKR)</label><input class="fin" type="number" placeholder="349000"></div><div class="fgp" style="margin:0"><label class="flb">Discount (%)</label><input class="fin" type="number" placeholder="0"></div></div>
+    <div style="height:12px"></div>
+    <div class="fr"><div class="fgp" style="margin:0"><label class="flb">Tax (%)</label><input class="fin" type="number" placeholder="18"></div><div class="fgp" style="margin:0"><label class="flb">Advance (%)</label><input class="fin" type="number" placeholder="50"></div></div>
+    <div style="height:14px"></div>
+    <button class="btn btn-p" style="width:100%" onclick="alert('Invoice generated and sent.');closeM('mi')">Generate &amp; Send PDF</button>
+  </div>
+</div>
+
+<div class="mov" id="mmtg" onclick="if(event.target===this)closeM('mmtg')">
+  <div class="mod">
+    <div class="mhd"><div class="mtt">Schedule Meeting</div><button class="mcl" onclick="closeM('mmtg')">&#10005;</button></div>
+    <div class="fgp"><label class="flb">Title</label><input class="fin" placeholder="Meeting title"></div>
+    <div class="fr"><div class="fgp" style="margin:0"><label class="flb">Date</label><input class="fin" type="date"></div><div class="fgp" style="margin:0"><label class="flb">Time</label><input class="fin" type="time" value="10:00"></div></div>
+    <div style="height:12px"></div>
+    <div class="fr"><div class="fgp" style="margin:0"><label class="flb">Platform</label><select class="fin"><option>Google Meet</option><option>Zoom</option><option>Teams</option></select></div><div class="fgp" style="margin:0"><label class="flb">Duration (min)</label><input class="fin" type="number" placeholder="60"></div></div>
+    <div style="height:12px"></div>
+    <div class="fgp"><label class="flb">Meeting Link</label><input class="fin" placeholder="https://meet.google.com/..."></div>
+    <div class="fgp"><label class="flb">Agenda</label><textarea class="fin" placeholder="Meeting agenda..."></textarea></div>
+    <button class="btn btn-p" style="width:100%" onclick="alert('Meeting scheduled. Client notified.');closeM('mmtg')">Schedule &amp; Notify Client</button>
+  </div>
+</div>
+
+<div class="mov" id="mc" onclick="if(event.target===this)closeM('mc')">
+  <div class="mod">
+    <div class="mhd"><div class="mtt">Add New Client</div><button class="mcl" onclick="closeM('mc')">&#10005;</button></div>
+    <div class="fr"><div class="fgp" style="margin:0"><label class="flb">Company</label><input class="fin" placeholder="Company name"></div><div class="fgp" style="margin:0"><label class="flb">Contact Person</label><input class="fin" placeholder="Full name"></div></div>
+    <div style="height:12px"></div>
+    <div class="fr"><div class="fgp" style="margin:0"><label class="flb">Email</label><input class="fin" type="email" placeholder="email@company.com"></div><div class="fgp" style="margin:0"><label class="flb">Phone</label><input class="fin" placeholder="+94 77..."></div></div>
+    <div style="height:12px"></div>
+    <div class="fgp"><label class="flb">Portal Credentials</label><div style="display:flex;gap:7px"><input class="fin" placeholder="Username" style="flex:1"><input class="fin" placeholder="Password" style="flex:1"></div></div>
+    <button class="btn btn-p" style="width:100%" onclick="alert('Client created. Credentials sent via email.');closeM('mc')">Create &amp; Send Credentials</button>
+  </div>
+</div>
+
+<script>
+// AUTH
+const titles={ad:'Dashboard',ap:'Projects',ac:'Clients',ai:'Invoices',apy:'Payments',am:'Meetings',as:'Services',ado:'Documents',an2:'Notifications',al:'Activity Log',cd:'Dashboard',cpr:'Project Status',ci:'Invoices',cpy:'Payments',cm:'Meetings',cdo:'Documents',cc:'Team Chat',cso:'Sign-Off'};
+
+function fa(){document.getElementById('lu').value='admin';document.getElementById('lp').value='admin123'}
+function fc(){document.getElementById('lu').value='client';document.getElementById('lp').value='client123'}
+
+function doLogin(){
+  const u=document.getElementById('lu').value.trim();
+  const p=document.getElementById('lp').value.trim();
+  if(u==='admin'&&p==='admin123'){initApp(true,'Kusagra R.','SUPER ADMIN','KR');go('ad');}
+  else if(u==='client'&&p==='client123'){initApp(false,'Kavindu P.','CLIENT','KP');go('cd');}
+  else alert('Invalid credentials.\n\nAdmin: admin / admin123\nClient: client / client123');
+}
+
+function initApp(isAdmin,name,role,av){
+  document.getElementById('uav').textContent=av;
+  document.getElementById('unm').textContent=name;
+  document.getElementById('url').textContent=role;
+  document.getElementById('an').style.display=isAdmin?'block':'none';
+  document.getElementById('cn').style.display=isAdmin?'none':'block';
+  document.getElementById('npbtn').style.display=isAdmin?'flex':'none';
+  document.getElementById('login-page').style.display='none';
+  document.getElementById('app').style.display='flex';
+}
+
+function doLogout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-page').style.display='flex';
+  document.getElementById('lu').value='';
+  document.getElementById('lp').value='';
+}
+
+document.getElementById('lp').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin()});
+
+// NAV
+function go(page){
+  document.querySelectorAll('.ps').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('page-'+page);
+  if(el)el.classList.add('active');
+  document.querySelectorAll('.sb-it').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.sb-it').forEach(n=>{
+    const oc=n.getAttribute('onclick')||'';
+    if(oc.includes("'"+page+"'"))n.classList.add('active');
+  });
+  document.getElementById('pgtitle').textContent=titles[page]||page;
+  document.querySelector('.cnt').scrollTop=0;
+  if(window.innerWidth<768)document.getElementById('sb').classList.remove('open');
+}
+
+// MODALS
+function openM(id){document.getElementById(id).classList.add('open')}
+function closeM(id){document.getElementById(id).classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.mov.open').forEach(m=>m.classList.remove('open'))});
+
+// CHAT
+function sendMsg(){
+  const inp=document.getElementById('cii');
+  const msg=inp.value.trim();if(!msg)return;
+  const box=document.getElementById('cms');
+  const d=document.createElement('div');
+  d.className='msg snt';
+  d.innerHTML=`<div class="mav">KP</div><div><div class="mbl">${msg}</div><div class="mts">Just now</div></div>`;
+  box.appendChild(d);inp.value='';box.scrollTop=9999;
+  setTimeout(()=>{
+    const r=document.createElement('div');r.className='msg';
+    r.innerHTML=`<div class="mav">KR</div><div><div class="mbl">Got it, I'll follow up shortly!</div><div class="mts">Just now</div></div>`;
+    box.appendChild(r);box.scrollTop=9999;
+  },1200);
+}
+
+// STARS
+function rate(n){document.querySelectorAll('#stars .star').forEach((s,i)=>s.classList.toggle('on',i<n))}
+
+// TABS
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',function(){
+    const tabs=this.closest('.tabs').querySelectorAll('.tab');
+    tabs.forEach(t=>t.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// RESPONSIVE
+function checkMobile(){const b=document.getElementById('mbtn');if(b)b.style.display=window.innerWidth<768?'block':'none';}
+checkMobile();window.addEventListener('resize',checkMobile);
+</script>
+</body>
+</html>

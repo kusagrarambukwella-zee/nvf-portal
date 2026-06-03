@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovahFalcons — Client Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--teal:#0077A8;--teal-lt:#E8F4FA;--teal-md:#CCE8F4;--teal-dk:#005A80;--text:#111827;--t2:#374151;--t3:#6B7280;--t4:#9CA3AF;--border:#E5E7EB;--border-md:#D1D5DB;--red:#DC2626;--bg:#F7F8FA;--white:#fff;--sh-md:0 4px 12px rgba(0,0,0,.08)}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;opacity:.3;pointer-events:none}
+.wrap{width:100%;max-width:400px;padding:24px;position:relative;z-index:1}
+.logo-area{text-align:center;margin-bottom:28px}
+.logo-wrap{width:72px;height:72px;border-radius:16px;background:var(--teal);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 6px 24px rgba(0,119,168,.22);overflow:hidden;padding:10px}
+.logo-wrap img{width:100%;height:100%;object-fit:contain;filter:brightness(0) invert(1)}
+.logo-name{font-size:21px;font-weight:800;color:var(--text);letter-spacing:-.3px;margin-bottom:3px}
+.logo-name span{color:var(--teal)}
+.logo-sub{font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase}
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:28px;box-shadow:var(--sh-md)}
+.card-title{font-size:18px;font-weight:700;margin-bottom:3px}
+.card-sub{font-size:13px;color:var(--t3);margin-bottom:22px}
+.err{background:#FEF2F2;border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:10px 13px;font-size:13px;color:var(--red);margin-bottom:14px;display:none}
+.err.show{display:block}
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.fi{width:100%;border:1px solid var(--border-md);border-radius:8px;padding:11px 13px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);background:var(--white);outline:none;transition:all .15s}
+.fi:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,119,168,.10)}
+.fi::placeholder{color:var(--t4)}
+.btn-login{width:100%;background:var(--teal);border:none;border-radius:8px;padding:13px;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-login:hover{background:var(--teal-dk)}
+.btn-login:disabled{background:var(--t4);cursor:not-allowed}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;display:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.foot{text-align:center;margin-top:20px;font-size:11px;color:var(--t4);line-height:1.8}
+@media(max-width:480px){.wrap{padding:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo-area">
+    <div class="logo-wrap"><img src="assets/logo.png" alt="NovahFalcons"></div>
+    <div class="logo-name">NOVAH<span>FALCONS</span></div>
+    <div class="logo-sub">Client Portal</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Sign in</div>
+    <div class="card-sub">Enter your credentials to access your project portal</div>
+    <div class="err" id="err">Invalid credentials. Please try again or contact your project manager.</div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="em" placeholder="your@email.com" autocomplete="email"></div>
+    <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="pw" placeholder="Enter your password" autocomplete="current-password"></div>
+    <button class="btn-login" id="login-btn" onclick="doLogin()">
+      <span id="btn-txt">Sign In</span>
+      <div class="spin" id="spin"></div>
+    </button>
+  </div>
+  <div class="foot">
+    NovahFalcons (PVT) Ltd &middot; SnugSpace, Pannipitiya<br>
+    +94 76 993 8077 &middot; novahfalcons.com
+  </div>
+</div>
+
+<script type="module">
+import { supabase, getProfile, logActivity } from './assets/supabase.js';
+
+// Already logged in?
+const { data: { session } } = await supabase.auth.getSession();
+if (session) redirectByRole(session.user);
+
+async function doLogin() {
+  const email = document.getElementById('em').value.trim();
+  const pass  = document.getElementById('pw').value;
+  if (!email || !pass) { showErr(); return; }
+
+  setLoading(true);
+  document.getElementById('err').classList.remove('show');
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+    await logActivity(data.user.id, 'LOGIN', 'Auth', 'User signed in');
+    redirectByRole(data.user);
+  } catch(e) {
+    showErr();
+    setLoading(false);
+  }
+}
+
+function redirectByRole(user) {
+  // role stored in user_metadata set at creation
+  const role = user.user_metadata?.role || 'client';
+  window.location.href = role === 'admin' ? './admin/dashboard.html' : './portal/dashboard.html';
+}
+
+function showErr() { document.getElementById('err').classList.add('show'); }
+function setLoading(on) {
+  document.getElementById('btn-txt').style.display = on ? 'none' : 'inline';
+  document.getElementById('spin').style.display     = on ? 'block' : 'none';
+  document.getElementById('login-btn').disabled     = on;
+}
+
+// Expose to window for onclick
+window.doLogin = doLogin;
+
+document.getElementById('pw').addEventListener('keypress', e => { if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Payments — NovahFalcons Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, fmt, timeAgo, escHtml } from '../assets/shell.js';
+import { supabase, getMyProject, uploadPaymentSlip, submitPayment, logActivity } from '../assets/supabase.js';
+
+const ctx = await initShell('payments');
+if (!ctx) return;
+setTitle('Payments');
+
+const { data: proj } = await getMyProject(ctx.user.id);
+
+const { data: history } = await supabase
+  .from('payments')
+  .select('*')
+  .eq('client_id', ctx.user.id)
+  .order('submitted_at', { ascending: false });
+
+const statusColor = { pending:'var(--amber)', approved:'var(--green)', rejected:'var(--red)' };
+
+const histRows = (history||[]).map(p => `
+  <div class="aci">
+    <div class="acd" style="background:${statusColor[p.status]||'var(--t4)'}"></div>
+    <div>
+      <div style="font-size:13px;font-weight:600">LKR ${fmt(p.amount)}</div>
+      <div style="font-size:11px;color:var(--t3)">${escHtml(p.payment_type||'Payment')} · ${timeAgo(p.submitted_at)}</div>
+      <span class="b ${p.status==='approved'?'bg':p.status==='rejected'?'br':'bam'}" style="margin-top:4px">${p.status}</span>
+    </div>
+  </div>`).join('') || '<div style="color:var(--t4);font-size:13px;text-align:center;padding:16px">No payment history yet.</div>';
+
+setContent(`
+  <div class="ph"><div class="pe">Finance</div><div class="pt">Upload Payment Slip</div></div>
+  ${!proj ? '<div class="alert alert-info">No active project found.</div>' : `
+  <div class="g2">
+    <div>
+      <div class="card" style="margin-bottom:12px;border-left:3px solid var(--amber)">
+        <div style="font-size:12px;color:var(--t3);margin-bottom:3px">Balance Outstanding</div>
+        <div style="font-size:28px;font-weight:800;color:var(--amber);letter-spacing:-.5px">LKR ${fmt(proj.balance_due)}</div>
+        <div style="font-size:11px;color:var(--t4);margin-top:3px">Project: ${escHtml(proj.code)}</div>
+      </div>
+      <div class="card">
+        <div class="chd"><div class="ct">Submit Payment Proof</div></div>
+        <div id="form-msg"></div>
+        <div class="fgp"><label class="flb">Payment Type</label>
+          <select class="fin" id="pay-type"><option>Bank Transfer Slip</option><option>Online Transfer</option><option>Receipt / Screenshot</option></select>
+        </div>
+        <div class="fgp"><label class="flb">Amount Paid (LKR)</label>
+          <input class="fin" type="number" id="pay-amount" placeholder="Enter amount">
+        </div>
+        <div class="fgp">
+          <label class="flb">Upload Slip / Proof</label>
+          <div class="upz" onclick="document.getElementById('slip-file').click()" id="upload-zone">
+            <div style="font-size:24px;margin-bottom:7px">&#128206;</div>
+            <div style="font-size:13px;font-weight:500;color:var(--t2)" id="file-label">Click to choose file</div>
+            <div style="font-size:11px;color:var(--t4);margin-top:3px">JPG, PNG, PDF · Max 10MB</div>
+          </div>
+          <input type="file" id="slip-file" accept=".jpg,.jpeg,.png,.pdf" style="display:none">
+        </div>
+        <div class="fgp"><label class="flb">Notes (Optional)</label>
+          <textarea class="fin" id="pay-notes" placeholder="Reference number, bank, transaction ID..."></textarea>
+        </div>
+        <button class="btn btn-p" style="width:100%" id="submit-btn" onclick="submitSlip()">
+          <span id="submit-txt">Submit Payment Slip</span>
+          <div class="spin" id="submit-spin" style="display:none"></div>
+        </button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ct">Payment History</div></div>
+      ${histRows}
+      <div style="height:1px;background:var(--border);margin:14px 0"></div>
+      <div style="font-size:11px;color:var(--t4);font-family:'JetBrains Mono',monospace;letter-spacing:.07em;margin-bottom:9px">OUR BANK DETAILS</div>
+      <div style="font-size:13px;color:var(--t2);line-height:2.1">
+        Bank: <b>Sampath Bank PLC</b><br>
+        Account: <b>NovahFalcons (PVT) Ltd</b><br>
+        Branch: <b>Pannipitiya</b>
+      </div>
+    </div>
+  </div>`}
+`);
+
+document.getElementById('slip-file')?.addEventListener('change', function() {
+  document.getElementById('file-label').textContent = this.files[0]?.name || 'Click to choose file';
+});
+
+window.submitSlip = async () => {
+  const amount = parseFloat(document.getElementById('pay-amount').value);
+  const type   = document.getElementById('pay-type').value;
+  const notes  = document.getElementById('pay-notes').value.trim();
+  const file   = document.getElementById('slip-file').files[0];
+  const msg    = document.getElementById('form-msg');
+
+  if (!amount || amount <= 0) {
+    msg.innerHTML = '<div class="alert alert-err">Please enter a valid amount.</div>';
+    return;
+  }
+
+  document.getElementById('submit-txt').style.display = 'none';
+  document.getElementById('submit-spin').style.display = 'block';
+  document.getElementById('submit-btn').disabled = true;
+
+  try {
+    let slipUrl = null;
+    if (file) slipUrl = await uploadPaymentSlip(file, proj.id, ctx.user.id);
+
+    await submitPayment({
+      project_id: proj.id,
+      client_id:  ctx.user.id,
+      amount, payment_type: type, notes,
+      slip_url: slipUrl,
+      status: 'pending',
+      submitted_at: new Date().toISOString()
+    });
+
+    await logActivity(ctx.user.id, 'UPLOADED', 'Payments', 'Payment slip LKR ' + amount);
+
+    msg.innerHTML = '<div class="alert alert-ok">&#10003; Payment slip submitted! Our team will verify within 24 hours.</div>';
+    document.getElementById('pay-amount').value = '';
+    document.getElementById('pay-notes').value = '';
+    document.getElementById('file-label').textContent = 'Click to choose file';
+    document.getElementById('slip-file').value = '';
+  } catch(e) {
+    msg.innerHTML = '<div class="alert alert-err">Upload failed: ' + escHtml(e.message) + '</div>';
+  } finally {
+    document.getElementById('submit-txt').style.display = 'inline';
+    document.getElementById('submit-spin').style.display = 'none';
+    document.getElementById('submit-btn').disabled = false;
+  }
+};
+</script>
+</body>
+</html>

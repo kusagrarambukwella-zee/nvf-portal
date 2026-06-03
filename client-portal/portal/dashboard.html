@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>My Dashboard — NovahFalcons Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, fmt, badge, progressBar, timeAgo, escHtml } from '../assets/shell.js';
+import { supabase, getMyProject, getMeetings, getInvoices } from '../assets/supabase.js';
+
+const ctx = await initShell('dashboard');
+if (!ctx) throw new Error('Not auth');
+
+const firstName = ctx.profile?.full_name?.split(' ')[0] || 'there';
+setTitle('Dashboard');
+
+const { data: proj } = await getMyProject(ctx.user.id);
+
+if (!proj) {
+  setContent(`
+    <div class="ph"><div class="pe">Welcome, ${escHtml(firstName)}</div><div class="pt">Your Project Portal</div></div>
+    <div class="alert alert-info">&#9432; No active project assigned yet. Your project manager will set this up shortly.</div>
+  `);
+  return;
+}
+
+const [
+  { data: meetings },
+  { data: invoices },
+  { count: unreadCount }
+] = await Promise.all([
+  getMeetings(proj.id),
+  getInvoices(proj.id),
+  supabase.from('messages').select('*',{count:'exact',head:true}).eq('project_id',proj.id).eq('is_read',false).neq('sender_id',ctx.user.id)
+]);
+
+const nextMeeting = (meetings||[]).find(m=>m.status==='upcoming'&&new Date(m.meeting_date)>=new Date());
+const latestInv   = (invoices||[])[0];
+
+const stageName = ['Inquiry','Info Gathering','Proposal','Advance Pending','Advance Received','Project Kickoff','Design Phase','Development','Internal Testing','Client Review 1','Revisions','Client Review 2','Final Testing','Final Payment Pending','Hosting & Deployment','Installation & Training','Sign-Off','Completed'][proj.stage-1] || 'Stage '+proj.stage;
+
+setContent(`
+  <div class="ph">
+    <div class="pe">Welcome back, ${escHtml(firstName)}</div>
+    <div class="pt">Your Project Portal</div>
+    <div class="ps2">Track your project, upload payments, and stay connected with your team.</div>
+  </div>
+  <div class="g4">
+    <a href="./payments.html" class="stat" style="border-color:var(--teal-md)">
+      <div class="si" style="background:var(--teal-lt);color:var(--teal)">&#8593;</div>
+      <div style="font-size:14px;font-weight:600">Upload Payment</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:2px">Balance: LKR ${fmt(proj.balance_due)}</div>
+    </a>
+    <a href="./meetings.html" class="stat">
+      <div class="si" style="background:var(--blue-bg);color:var(--blue)">&#128197;</div>
+      <div style="font-size:14px;font-weight:600">Meetings</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:2px">${nextMeeting ? new Date(nextMeeting.meeting_date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : 'None upcoming'}</div>
+    </a>
+    <a href="./invoices.html" class="stat">
+      <div class="si" style="background:var(--green-bg);color:var(--green)">&#9112;</div>
+      <div style="font-size:14px;font-weight:600">Invoices</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:2px">${latestInv ? escHtml(latestInv.invoice_no) : 'None yet'}</div>
+    </a>
+    <a href="./chat.html" class="stat">
+      <div class="si" style="background:var(--amber-bg);color:var(--amber)">&#128172;</div>
+      <div style="font-size:14px;font-weight:600">Team Chat</div>
+      <div style="font-size:11px;color:${unreadCount>0?'var(--amber)':'var(--t3)'};margin-top:2px;font-weight:${unreadCount>0?700:400}">${unreadCount>0 ? unreadCount+' unread' : 'Message your team'}</div>
+    </a>
+  </div>
+  <div class="g21">
+    <div class="card">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);margin-bottom:3px">${escHtml(proj.code)}</div>
+      <div style="font-size:19px;font-weight:800;letter-spacing:-.3px;margin-bottom:2px">${escHtml(proj.title)}</div>
+      <div style="font-size:13px;color:var(--t3);margin-bottom:9px">${escHtml(ctx.profile?.company_name||'')}</div>
+      <span class="b bbl">${escHtml(stageName)}</span>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--bg);border-radius:var(--rs);padding:11px;margin:14px 0">
+        <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">PM</div><div style="font-size:13px;font-weight:600;margin-top:2px">${escHtml(proj.manager?.full_name||'—')}</div></div>
+        <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">STARTED</div><div style="font-size:13px;font-weight:600;margin-top:2px">${proj.start_date ? new Date(proj.start_date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : 'TBD'}</div></div>
+        <div><div style="font-size:10px;color:var(--t4);font-family:'JetBrains Mono',monospace">EST. DONE</div><div style="font-size:13px;font-weight:600;margin-top:2px">${proj.estimated_end ? new Date(proj.estimated_end).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : 'TBD'}</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font-size:13px;color:var(--t3)">Overall Progress</span>
+        <span style="font-size:24px;font-weight:800;color:var(--teal);letter-spacing:-.3px">${proj.progress}%</span>
+      </div>
+      ${progressBar(proj.progress)}
+      <div style="font-size:11px;color:var(--t4);margin-top:5px">Stage ${proj.stage} of 18</div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="chd"><div class="ct">Payment Summary</div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t3)">Contract Total</span><span style="font-weight:600">LKR ${fmt(proj.contract_value)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t3)">Amount Paid</span><span style="color:var(--green);font-weight:600">LKR ${fmt(proj.advance_paid)} &#10003;</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t3)">Balance Due</span><span style="color:var(--amber);font-weight:600">LKR ${fmt(proj.balance_due)}</span></div>
+        </div>
+        <a href="./payments.html" class="btn btn-p btn-sm" style="width:100%;justify-content:center">Upload Payment Slip &rarr;</a>
+      </div>
+      ${nextMeeting ? `
+      <div class="card">
+        <div class="chd"><div class="ct">Next Meeting</div></div>
+        <div class="mtg" style="margin:0">
+          <div class="md">
+            <div class="mdy">${new Date(nextMeeting.meeting_date).getDate()}</div>
+            <div class="mmo">${new Date(nextMeeting.meeting_date).toLocaleDateString('en-GB',{month:'short'})}</div>
+          </div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">${escHtml(nextMeeting.title)}</div>
+          <div style="font-size:12px;color:var(--t3)">${nextMeeting.meeting_time?.slice(0,5)||''}</div></div>
+          ${nextMeeting.meeting_link ? `<a href="${escHtml(nextMeeting.meeting_link)}" target="_blank" class="btn btn-p btn-sm">Join</a>` : ''}
+        </div>
+      </div>` : ''}
+    </div>
+  </div>
+`);
+</script>
+</body>
+</html>
