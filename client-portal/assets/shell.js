@@ -51,7 +51,7 @@ export async function initShell(activePage) {
     <nav class="sb" id="sb">
       <div class="sb-hd">
         <div class="sb-logo">
-          <div class="sb-mark"><img src="../assets/logo.png" alt="NovahFalcons"></div>
+          <div class="sb-mark"><img src="../assets/logo.png" alt="NovahFalcons" onerror="this.style.display='none'"></div>
           <div>
             <div class="sb-br">NOVAH<span>FALCONS</span></div>
             <div class="sb-tag">${isAdmin ? 'ADMIN' : 'CLIENT'} PORTAL</div>

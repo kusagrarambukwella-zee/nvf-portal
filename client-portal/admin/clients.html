@@ -51,11 +51,12 @@ setContent(`
     <div class="mod" style="max-width:440px">
       <div class="mhd"><div class="mtt">Invite Client</div><button class="mcl" onclick="closeM('modal-invite')">&#10005;</button></div>
       <div id="inv-msg"></div>
-      <p style="font-size:13px;color:var(--t3);margin-bottom:16px">Send a magic link invitation. The client will set their own password on first login.</p>
+      <p style="font-size:13px;color:var(--t3);margin-bottom:16px">Create a client account. Set a password to give them instant access, or leave it blank to send a magic link invitation.</p>
       <div class="fgp"><label class="flb">Full Name</label><input class="fin" id="inv-name" placeholder="John Silva"></div>
       <div class="fgp"><label class="flb">Company Name</label><input class="fin" id="inv-company" placeholder="Silva Holdings"></div>
       <div class="fgp"><label class="flb">Email Address</label><input class="fin" type="email" id="inv-email" placeholder="john@company.com"></div>
       <div class="fgp"><label class="flb">Phone</label><input class="fin" id="inv-phone" placeholder="+94 77 000 0000"></div>
+      <div class="fgp"><label class="flb">Password <span style="color:var(--t4);font-weight:400">(leave blank to send magic link instead)</span></label><input class="fin" type="password" id="inv-password" placeholder="Min 6 characters"></div>
       <div class="mft">
         <button class="btn btn-g" onclick="closeM('modal-invite')">Cancel</button>
         <button class="btn btn-p" onclick="inviteClient()">Send Invitation</button>
@@ -83,7 +84,7 @@ window.inviteClient = async () => {
   const res = await fetch('https://nplxdqhnracszrdlkeap.supabase.co/functions/v1/invite-client', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-    body: JSON.stringify({ full_name: name, company_name: company, phone, email })
+    body: JSON.stringify({ full_name: name, company_name: company, phone, email, password: document.getElementById('inv-password').value.trim()||undefined })
   });
   const result = await res.json();
   if (!res.ok) { msg.innerHTML=`<div class="alert alert-err">${escHtml(result.error)}</div>`; return; }
