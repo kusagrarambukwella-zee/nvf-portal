@@ -26,9 +26,7 @@ if (!proj) {
     <div class="ph"><div class="pe">Welcome, ${escHtml(firstName)}</div><div class="pt">Your Project Portal</div></div>
     <div class="alert alert-info">&#9432; No active project assigned yet. Your project manager will set this up shortly.</div>
   `);
-  return;
-}
-
+} else {
 const [
   { data: meetings },
   { data: invoices },
@@ -116,6 +114,7 @@ setContent(`
     </div>
   </div>
 `);
+} // end else
 </script>
 </body>
 </html>
