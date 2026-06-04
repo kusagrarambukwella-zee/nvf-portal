@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Team Chat — NovahFalcons Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, escHtml, timeAgo } from '../assets/shell.js';
+import { supabase, getMyProject, getMessages, sendMessage, subscribeToMessages, logActivity } from '../assets/supabase.js';
+
+const ctx = await initShell('chat');
+if (!ctx) return;
+setTitle('Team Chat');
+
+const { data: proj } = await getMyProject(ctx.user.id);
+if (!proj) { setContent('<div class="alert alert-info">No active project.</div>'); return; }
+
+setContent(`
+  <div class="ph"><div class="pe">Communication</div><div class="pt">Team Chat</div></div>
+  <div class="chw" style="max-width:720px">
+    <div class="chh">
+      <div class="u-av">NF</div>
+      <div>
+        <div style="font-size:13px;font-weight:600">NovahFalcons Team</div>
+        <div style="font-size:11px;color:var(--green)">&#9679; Project: ${escHtml(proj.code)}</div>
+      </div>
+    </div>
+    <div class="cms" id="cms"><div style="text-align:center;color:var(--t4);font-size:13px;padding:20px">Loading messages...</div></div>
+    <div class="cia">
+      <input class="cii" id="cii" placeholder="Type a message..." autocomplete="off">
+      <button class="btn btn-p btn-sm" id="send-btn" onclick="doSend()">Send</button>
+    </div>
+  </div>
+`);
+
+function renderMessages(msgs) {
+  const box = document.getElementById('cms');
+  if (!msgs.length) { box.innerHTML = '<div style="text-align:center;color:var(--t4);font-size:13px;padding:20px">No messages yet. Start the conversation!</div>'; return; }
+  box.innerHTML = msgs.map(m => {
+    const mine = m.sender_id === ctx.user.id;
+    const av   = m.sender?.avatar || (m.sender?.full_name||'?').slice(0,2).toUpperCase();
+    return `<div class="msg${mine?' snt':''}">
+      <div class="mav">${escHtml(av)}</div>
+      <div><div class="mbl">${escHtml(m.message)}</div>
+      <div class="mts">${timeAgo(m.sent_at)}</div></div>
+    </div>`;
+  }).join('');
+  box.scrollTop = 9999;
+}
+
+// Load initial messages
+const { data: msgs } = await getMessages(proj.id);
+renderMessages(msgs || []);
+
+// Mark as read
+await supabase.from('messages').update({is_read:true}).eq('project_id',proj.id).neq('sender_id',ctx.user.id);
+
+// Subscribe to new messages
+subscribeToMessages(proj.id, async (newMsg) => {
+  const { data: sender } = await supabase.from('profiles').select('full_name,avatar').eq('id',newMsg.sender_id).single();
+  newMsg.sender = sender;
+  const box = document.getElementById('cms');
+  const div = document.createElement('div');
+  div.className = 'msg' + (newMsg.sender_id===ctx.user.id?' snt':'');
+  const av = sender?.avatar || (sender?.full_name||'?').slice(0,2).toUpperCase();
+  div.innerHTML = `<div class="mav">${escHtml(av)}</div><div><div class="mbl">${escHtml(newMsg.message)}</div><div class="mts">just now</div></div>`;
+  box.appendChild(div);
+  box.scrollTop = 9999;
+});
+
+window.doSend = async () => {
+  const inp = document.getElementById('cii');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  document.getElementById('send-btn').disabled = true;
+  try {
+    await sendMessage(proj.id, ctx.user.id, msg);
+  } catch(e) { inp.value = msg; }
+  document.getElementById('send-btn').disabled = false;
+  inp.focus();
+};
+
+document.getElementById('cii').addEventListener('keypress', e => { if(e.key==='Enter') doSend(); });
+</script>
+</body>
+</html>
