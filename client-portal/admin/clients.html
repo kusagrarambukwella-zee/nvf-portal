@@ -80,16 +80,26 @@ window.inviteClient = async () => {
   const msg     = document.getElementById('inv-msg');
   if (!name||!email) { msg.innerHTML='<div class="alert alert-err">Name and email are required.</div>'; return; }
 
+  const password = document.getElementById('inv-password').value.trim();
   const { data: { session } } = await supabase.auth.getSession();
   const res = await fetch('https://nplxdqhnracszrdlkeap.supabase.co/functions/v1/invite-client', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-    body: JSON.stringify({ full_name: name, company_name: company, phone, email, password: document.getElementById('inv-password').value.trim()||undefined })
+    body: JSON.stringify({ full_name: name, company_name: company, phone, email, password: password||undefined })
   });
   const result = await res.json();
   if (!res.ok) { msg.innerHTML=`<div class="alert alert-err">${escHtml(result.error)}</div>`; return; }
-  await logActivity(ctx.user.id,'INVITED','Clients',email);
-  msg.innerHTML='<div class="alert alert-ok">&#10003; Invitation sent to '+escHtml(email)+'</div>';
+  await logActivity(ctx.user.id,'CREATED','Clients',email);
+
+  const shareText = `Hi ${escHtml(name)}, your NovahFalcons client portal is ready!\n\n🔗 Login: https://novahfalcons.com/client-portal/\n📧 Email: ${email}${password ? `\n🔑 Password: ${password}` : '\n🔑 Check your email for the login link'}\n\nWelcome aboard! — NovahFalcons Team`;
+
+  msg.innerHTML = `
+    <div class="alert alert-ok">&#10003; Client account created!</div>
+    <div style="margin-top:12px;background:var(--bg2);border-radius:8px;padding:14px;font-size:13px;white-space:pre-wrap;color:var(--t2);line-height:1.7">${shareText}</div>
+    <button class="btn btn-s" style="margin-top:8px;width:100%" onclick="
+      navigator.clipboard.writeText(${JSON.stringify(`Hi ${name}, your NovahFalcons client portal is ready!\n\n🔗 Login: https://novahfalcons.com/client-portal/\n📧 Email: ${email}${password ? `\n🔑 Password: ${password}` : '\n🔑 Check your email for the login link'}\n\nWelcome aboard! — NovahFalcons Team`)});
+      this.textContent='✓ Copied!';setTimeout(()=>this.textContent='Copy to share via WhatsApp / Email',2000)
+    ">Copy to share via WhatsApp / Email</button>`;
 };
 </script>
 </body>
