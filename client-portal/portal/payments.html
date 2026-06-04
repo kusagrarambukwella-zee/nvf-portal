@@ -14,7 +14,7 @@ import { initShell, setTitle, setContent, fmt, timeAgo, escHtml } from '../asset
 import { supabase, getMyProject, uploadPaymentSlip, submitPayment, logActivity } from '../assets/supabase.js';
 
 const ctx = await initShell('payments');
-if (!ctx) return;
+if (!ctx) throw new Error('Not auth');
 setTitle('Payments');
 
 const { data: proj } = await getMyProject(ctx.user.id);
