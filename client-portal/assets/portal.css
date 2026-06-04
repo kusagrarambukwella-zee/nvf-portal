@@ -23,7 +23,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sb-hd{padding:16px 14px 12px;border-bottom:1px solid var(--border)}
 .sb-logo{display:flex;align-items:center;gap:10px}
 .sb-mark{width:36px;height:36px;border-radius:8px;background:var(--teal);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;padding:5px}
-.sb-mark img{width:100%;height:100%;object-fit:contain;filter:brightness(0) invert(1)}
+.sb-mark img{width:100%;height:100%;object-fit:contain;filter:none}
 .sb-br{font-size:12px;font-weight:800;color:var(--text);letter-spacing:-.2px}
 .sb-br span{color:var(--teal)}
 .sb-tag{font-size:9px;color:var(--t4);font-family:'JetBrains Mono',monospace;letter-spacing:.1em}
