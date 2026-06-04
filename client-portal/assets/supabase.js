@@ -90,11 +90,31 @@ export async function getPendingPayments() {
 }
 
 export async function updatePaymentStatus(id, status) {
+  // Update payment status
   const { error } = await supabase
     .from('payments')
     .update({ status, reviewed_at: new Date().toISOString() })
     .eq('id', id);
   if (error) throw error;
+
+  // If approved, update the project balance automatically
+  if (status === 'approved') {
+    const { data: payment } = await supabase
+      .from('payments').select('amount, project_id').eq('id', id).single();
+    if (payment) {
+      const { data: project } = await supabase
+        .from('projects').select('advance_paid, balance_due').eq('id', payment.project_id).single();
+      if (project) {
+        const newAdvance = Number(project.advance_paid) + Number(payment.amount);
+        const newBalance = Math.max(0, Number(project.balance_due) - Number(payment.amount));
+        await supabase.from('projects').update({
+          advance_paid: newAdvance,
+          balance_due:  newBalance,
+          updated_at:   new Date().toISOString()
+        }).eq('id', payment.project_id);
+      }
+    }
+  }
 }
 
 // ── Meetings helpers ──────────────────────────────────
