@@ -19,9 +19,15 @@ setTitle('Clients');
 
 setTopbarActions(`<button class="tb pr" onclick="openM('modal-invite')">+ Invite Client</button>`);
 
-const { data: clients } = await supabase
-  .from('profiles').select('*, projects:projects(id)')
+const { data: clients, error: clientsErr } = await supabase
+  .from('profiles').select('id,full_name,company_name,phone,avatar,role,is_active,created_at')
   .eq('role','client').order('created_at',{ascending:false});
+
+// Get project counts separately
+const { data: projCounts } = await supabase
+  .from('projects').select('client_id');
+const countMap = {};
+(projCounts||[]).forEach(p => { countMap[p.client_id] = (countMap[p.client_id]||0)+1; });
 
 const rows = (clients||[]).map(c=>`
   <tr>
@@ -33,7 +39,7 @@ const rows = (clients||[]).map(c=>`
     </td>
     <td>${escHtml(c.company_name||'—')}</td>
     <td>${escHtml(c.phone||'—')}</td>
-    <td>${(c.projects||[]).length} project${(c.projects||[]).length!==1?'s':''}</td>
+    <td>${countMap[c.id]||0} project${(countMap[c.id]||0)!==1?'s':''}</td>
     <td><span class="b ${c.is_active?'bg':'br'}">${c.is_active?'Active':'Inactive'}</span></td>
     <td><button class="btn btn-sm btn-s" onclick="toggleActive('${c.id}',${c.is_active})">${c.is_active?'Deactivate':'Activate'}</button></td>
   </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--t4);padding:24px">No clients yet.</td></tr>';
