@@ -38,7 +38,7 @@ const [
 const { data: revData } = await supabase.from('payments').select('amount').eq('status','approved');
 const revenue = (revData||[]).reduce((s,r)=>s+Number(r.amount),0);
 
-const projRows = (recentProj.data||[]).map(p => `
+const projRows = (recentProj||[]).map(p => `
   <tr>
     <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">${escHtml(p.code)}</span></td>
     <td><b>${escHtml(p.client?.company_name||'—')}</b></td>
@@ -49,7 +49,7 @@ const projRows = (recentProj.data||[]).map(p => `
     <td><span class="risk r${(p.risk||'low')[0]}">${p.risk||'low'}</span></td>
   </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--t4);padding:24px">No active projects yet.</td></tr>';
 
-const payRows = (pendingPay.data||[]).slice(0,4).map(py => `
+const payRows = (pendingPay||[]).slice(0,4).map(py => `
   <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
     <div>
       <div style="font-size:13px;font-weight:600">${escHtml(py.client?.company_name||'—')}</div>
@@ -74,7 +74,7 @@ setContent(`
     </div>
     <div class="stat" onclick="window.location.href='payments.html'">
       <div class="si" style="background:var(--amber-bg);color:var(--amber)">&#9670;</div>
-      <div class="sn">${(pendingPay.data||[]).length}</div><div class="sl">Pending Payments</div>
+      <div class="sn">${(pendingPay||[]).length}</div><div class="sl">Pending Payments</div>
     </div>
     <div class="stat">
       <div class="si" style="background:var(--green-bg);color:var(--green)">&#9675;</div>
@@ -90,7 +90,7 @@ setContent(`
   </div>
   <div class="g2">
     <div class="card">
-      <div class="chd"><div class="ct">Pending Payment Slips</div><span class="b bam">${(pendingPay.data||[]).length} pending</span></div>
+      <div class="chd"><div class="ct">Pending Payment Slips</div><span class="b bam">${(pendingPay||[]).length} pending</span></div>
       ${payRows}
     </div>
     <div class="card" id="activity-card">
