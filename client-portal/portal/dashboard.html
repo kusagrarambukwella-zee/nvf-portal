@@ -30,15 +30,20 @@ if (!proj) {
 const [
   { data: meetings },
   { data: invoices },
-  { count: unreadCount }
+  { count: unreadCount },
+  { data: approvedPays }
 ] = await Promise.all([
   getMeetings(proj.id),
   getInvoices(proj.id),
-  supabase.from('messages').select('*',{count:'exact',head:true}).eq('project_id',proj.id).eq('is_read',false).neq('sender_id',ctx.user.id)
+  supabase.from('messages').select('*',{count:'exact',head:true}).eq('project_id',proj.id).eq('is_read',false).neq('sender_id',ctx.user.id),
+  supabase.from('payments').select('amount').eq('client_id',ctx.user.id).eq('status','approved')
 ]);
 
-const nextMeeting = (meetings||[]).find(m=>m.status==='upcoming'&&new Date(m.meeting_date)>=new Date());
-const latestInv   = (invoices||[])[0];
+const nextMeeting   = (meetings||[]).find(m=>m.status==='upcoming'&&new Date(m.meeting_date)>=new Date());
+const latestInv     = (invoices||[]).find(inv=>['sent','paid','partially_paid','overdue'].includes(inv.status)) || (invoices||[])[0];
+const totalApproved = (approvedPays||[]).reduce((s,p)=>s+Number(p.amount),0);
+const invoiceTotal  = latestInv ? Number(latestInv.total) : Number(proj.contract_value);
+const balanceDue    = Math.max(0, invoiceTotal - totalApproved);
 
 const stageName = ['Inquiry','Info Gathering','Proposal','Advance Pending','Advance Received','Project Kickoff','Design Phase','Development','Internal Testing','Client Review 1','Revisions','Client Review 2','Final Testing','Final Payment Pending','Hosting & Deployment','Installation & Training','Sign-Off','Completed'][proj.stage-1] || 'Stage '+proj.stage;
 
@@ -52,7 +57,7 @@ setContent(`
     <a href="./payments.html" class="stat" style="border-color:var(--teal-md)">
       <div class="si" style="background:var(--teal-lt);color:var(--teal)">&#8593;</div>
       <div style="font-size:14px;font-weight:600">Upload Payment</div>
-      <div style="font-size:11px;color:var(--t3);margin-top:2px">Balance: LKR ${fmt(proj.balance_due)}</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:2px">Balance: LKR ${fmt(balanceDue)}</div>
     </a>
     <a href="./meetings.html" class="stat">
       <div class="si" style="background:var(--blue-bg);color:var(--blue)">&#128197;</div>
@@ -92,9 +97,9 @@ setContent(`
       <div class="card" style="margin-bottom:12px">
         <div class="chd"><div class="ct">Payment Summary</div></div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t3)">Contract Total</span><span style="font-weight:600">LKR ${fmt(proj.contract_value)}</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t3)">Amount Paid</span><span style="color:var(--green);font-weight:600">LKR ${fmt(proj.advance_paid)} &#10003;</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t3)">Balance Due</span><span style="color:var(--amber);font-weight:600">LKR ${fmt(proj.balance_due)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t3)">Invoice Total</span><span style="font-weight:600">LKR ${fmt(invoiceTotal)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t3)">Amount Paid</span><span style="color:var(--green);font-weight:600">LKR ${fmt(totalApproved)} &#10003;</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t3)">Balance Due</span><span style="color:var(--amber);font-weight:600">LKR ${fmt(balanceDue)}</span></div>
         </div>
         <a href="./payments.html" class="btn btn-p btn-sm" style="width:100%;justify-content:center">Upload Payment Slip &rarr;</a>
       </div>
