@@ -25,7 +25,14 @@ const { data: history } = await supabase
   .eq('client_id', ctx.user.id)
   .order('submitted_at', { ascending: false });
 
-const statusColor = { pending:'var(--amber)', approved:'var(--green)', rejected:'var(--red)' };
+// Compute balance dynamically from actual approved payments
+const totalApproved = (history||[])
+  .filter(p => p.status === 'approved')
+  .reduce((sum, p) => sum + Number(p.amount), 0);
+const contractValue  = Number(proj?.contract_value || 0);
+const dynamicBalance = Math.max(0, contractValue - totalApproved);
+
+const statusColor = { pending:'var(--amber)', approved:'var(--green)', rejected:'var(--red,#dc2626)' };
 
 const histRows = (history||[]).map(p => `
   <div class="aci">
@@ -44,8 +51,15 @@ setContent(`
     <div>
       <div class="card" style="margin-bottom:12px;border-left:3px solid var(--amber)">
         <div style="font-size:12px;color:var(--t3);margin-bottom:3px">Balance Outstanding</div>
-        <div style="font-size:28px;font-weight:800;color:var(--amber);letter-spacing:-.5px">LKR ${fmt(proj.balance_due)}</div>
+        <div style="font-size:28px;font-weight:800;color:var(--amber);letter-spacing:-.5px">LKR ${fmt(dynamicBalance)}</div>
         <div style="font-size:11px;color:var(--t4);margin-top:3px">Project: ${escHtml(proj.code)}</div>
+        <div style="height:1px;background:var(--border);margin:10px 0"></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t3)">
+          <span>Contract Total</span><span style="font-weight:600;color:var(--t2)">LKR ${fmt(contractValue)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t3);margin-top:4px">
+          <span>Total Paid (Approved)</span><span style="font-weight:600;color:var(--green)">LKR ${fmt(totalApproved)}</span>
+        </div>
       </div>
       <div class="card">
         <div class="chd"><div class="ct">Submit Payment Proof</div></div>
