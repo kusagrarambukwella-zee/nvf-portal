@@ -11,7 +11,7 @@
 <div id="app"></div>
 <script type="module">
 import { initShell, setTitle, setContent, fmt, timeAgo, escHtml } from '../assets/shell.js';
-import { supabase, getMyProject, uploadPaymentSlip, submitPayment, logActivity } from '../assets/supabase.js';
+import { supabase, getMyProject, uploadPaymentSlip, submitPayment, logActivity, getInvoices } from '../assets/supabase.js';
 
 const ctx = await initShell('payments');
 if (!ctx) throw new Error('Not auth');
@@ -19,18 +19,19 @@ setTitle('Payments');
 
 const { data: proj } = await getMyProject(ctx.user.id);
 
-const { data: history } = await supabase
-  .from('payments')
-  .select('*')
-  .eq('client_id', ctx.user.id)
-  .order('submitted_at', { ascending: false });
+const [{ data: history }, { data: invoices }] = await Promise.all([
+  supabase.from('payments').select('*').eq('client_id', ctx.user.id).order('submitted_at', { ascending: false }),
+  proj ? getInvoices(proj.id) : { data: [] }
+]);
 
-// Compute balance dynamically from actual approved payments
-const totalApproved = (history||[])
-  .filter(p => p.status === 'approved')
-  .reduce((sum, p) => sum + Number(p.amount), 0);
-const contractValue  = Number(proj?.contract_value || 0);
-const dynamicBalance = Math.max(0, contractValue - totalApproved);
+// Use latest sent/paid invoice total as the base (after discount), fallback to contract value
+const latestInvoice = (invoices||[]).find(inv => ['sent','paid','partially_paid','overdue'].includes(inv.status));
+const invoiceTotal  = latestInvoice ? Number(latestInvoice.total) : Number(proj?.contract_value || 0);
+const invoiceLabel  = latestInvoice ? `Invoice ${latestInvoice.invoice_no} Total (after discount)` : 'Contract Value';
+
+// Compute balance from actual approved payments
+const totalApproved  = (history||[]).filter(p => p.status === 'approved').reduce((sum, p) => sum + Number(p.amount), 0);
+const dynamicBalance = Math.max(0, invoiceTotal - totalApproved);
 
 const statusColor = { pending:'var(--amber)', approved:'var(--green)', rejected:'var(--red,#dc2626)' };
 
@@ -54,8 +55,15 @@ setContent(`
         <div style="font-size:28px;font-weight:800;color:var(--amber);letter-spacing:-.5px">LKR ${fmt(dynamicBalance)}</div>
         <div style="font-size:11px;color:var(--t4);margin-top:3px">Project: ${escHtml(proj.code)}</div>
         <div style="height:1px;background:var(--border);margin:10px 0"></div>
+        ${latestInvoice && Number(latestInvoice.discount_pct) > 0 ? `
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t3);margin-bottom:4px">
+          <span>Original Value</span><span style="font-weight:600;color:var(--t2)">LKR ${fmt(latestInvoice.subtotal)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--green);margin-bottom:4px">
+          <span>Discount (${latestInvoice.discount_pct}%)</span><span style="font-weight:600">− LKR ${fmt(Number(latestInvoice.subtotal) * Number(latestInvoice.discount_pct) / 100)}</span>
+        </div>` : ''}
         <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t3)">
-          <span>Contract Total</span><span style="font-weight:600;color:var(--t2)">LKR ${fmt(contractValue)}</span>
+          <span>${invoiceLabel}</span><span style="font-weight:600;color:var(--t2)">LKR ${fmt(invoiceTotal)}</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t3);margin-top:4px">
           <span>Total Paid (Approved)</span><span style="font-weight:600;color:var(--green)">LKR ${fmt(totalApproved)}</span>
