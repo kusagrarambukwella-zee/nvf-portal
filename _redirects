@@ -5,7 +5,3 @@
 # Client portal — serve from subfolder
 /client-portal  /client-portal/index.html  301
 /client-portal/ /client-portal/index.html  200
-
-# Handle direct navigation to portal subpages
-/client-portal/admin/*   /client-portal/:splat   200
-/client-portal/portal/*  /client-portal/:splat   200
