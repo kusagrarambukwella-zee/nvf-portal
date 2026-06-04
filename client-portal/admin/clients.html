@@ -79,10 +79,14 @@ window.inviteClient = async () => {
   const msg     = document.getElementById('inv-msg');
   if (!name||!email) { msg.innerHTML='<div class="alert alert-err">Name and email are required.</div>'; return; }
 
-  const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: name, company_name: company, phone, role: 'client' }
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch('https://nplxdqhnracszrdlkeap.supabase.co/functions/v1/invite-client', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+    body: JSON.stringify({ full_name: name, company_name: company, phone, email })
   });
-  if (error) { msg.innerHTML=`<div class="alert alert-err">${escHtml(error.message)}</div>`; return; }
+  const result = await res.json();
+  if (!res.ok) { msg.innerHTML=`<div class="alert alert-err">${escHtml(result.error)}</div>`; return; }
   await logActivity(ctx.user.id,'INVITED','Clients',email);
   msg.innerHTML='<div class="alert alert-ok">&#10003; Invitation sent to '+escHtml(email)+'</div>';
 };
