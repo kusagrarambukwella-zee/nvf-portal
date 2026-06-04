@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Documents — NovahFalcons Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, setTopbarActions, badge, timeAgo, escHtml } from '../assets/shell.js';
+import { supabase, logActivity } from '../assets/supabase.js';
+
+const ctx = await initShell('documents');
+if (!ctx) throw new Error('Not auth');
+setTitle('Documents');
+
+setTopbarActions(`<button class="tb pr" onclick="openM('modal-new')">+ Upload Document</button>`);
+
+const [{ data: docs }, { data: projects }] = await Promise.all([
+  supabase.from('documents').select('*, project:projects(code), uploader:profiles!documents_uploaded_by_fkey(full_name)').order('uploaded_at',{ascending:false}),
+  supabase.from('projects').select('id,code,title').eq('status','active')
+]);
+
+const rows = (docs||[]).map(d=>`
+  <tr>
+    <td><b>${escHtml(d.file_name)}</b><div style="font-size:11px;color:var(--t3)">${escHtml(d.original_name||'')}</div></td>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">${escHtml(d.project?.code||'—')}</span></td>
+    <td>${escHtml(d.file_type||'—')}</td>
+    <td>${d.file_size ? Math.round(d.file_size/1024)+' KB' : '—'}</td>
+    <td>${badge(d.visibility)}</td>
+    <td>${badge(d.status)}</td>
+    <td>${escHtml(d.uploader?.full_name||'—')}</td>
+    <td>${timeAgo(d.uploaded_at)}</td>
+    <td style="display:flex;gap:6px">
+      <select class="fin" style="padding:4px 8px;font-size:12px" onchange="updateVisibility('${d.id}',this.value)">
+        <option value="internal" ${d.visibility==='internal'?'selected':''}>Internal</option>
+        <option value="client" ${d.visibility==='client'?'selected':''}>Client</option>
+        <option value="signed" ${d.visibility==='signed'?'selected':''}>Signed</option>
+      </select>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--t4);padding:24px">No documents yet.</td></tr>';
+
+const projOpts = (projects||[]).map(p=>`<option value="${p.id}">${escHtml(p.code)} — ${escHtml(p.title)}</option>`).join('');
+
+setContent(`
+  <div class="ph"><div class="pe">Setup</div><div class="pt">Documents</div></div>
+  <div class="card" style="padding:0;overflow:auto">
+    <table class="dt">
+      <thead><tr><th>File</th><th>Project</th><th>Type</th><th>Size</th><th>Visibility</th><th>Status</th><th>Uploaded By</th><th>When</th><th>Visibility</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+
+  <div class="mov" id="modal-new">
+    <div class="mod" style="max-width:480px">
+      <div class="mhd"><div class="mtt">Upload Document</div><button class="mcl" onclick="closeM('modal-new')">&#10005;</button></div>
+      <div id="new-msg"></div>
+      <div class="fgp"><label class="flb">Project</label>
+        <select class="fin" id="n-proj"><option value="">Select project...</option>${projOpts}</select>
+      </div>
+      <div class="fgp"><label class="flb">Document Name</label><input class="fin" id="n-name" placeholder="Proposal v1, NDA, Invoice..."></div>
+      <div class="fgp">
+        <label class="flb">File</label>
+        <div class="upz" onclick="document.getElementById('n-file').click()" id="upload-zone">
+          <div style="font-size:24px;margin-bottom:7px">&#128206;</div>
+          <div style="font-size:13px;font-weight:500;color:var(--t2)" id="file-label">Click to choose file</div>
+          <div style="font-size:11px;color:var(--t4);margin-top:3px">PDF, DOC, PNG, JPG · Max 20MB</div>
+        </div>
+        <input type="file" id="n-file" style="display:none" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.xlsx,.xls">
+      </div>
+      <div class="fgp"><label class="flb">Visibility</label>
+        <select class="fin" id="n-vis">
+          <option value="internal">Internal (admin only)</option>
+          <option value="client">Client (visible to client)</option>
+          <option value="signed">Signed (final signed copy)</option>
+        </select>
+      </div>
+      <div class="mft">
+        <button class="btn btn-g" onclick="closeM('modal-new')">Cancel</button>
+        <button class="btn btn-p" id="upload-btn" onclick="uploadDoc()">Upload</button>
+      </div>
+    </div>
+  </div>
+`);
+
+document.getElementById('n-file')?.addEventListener('change', function() {
+  document.getElementById('file-label').textContent = this.files[0]?.name || 'Click to choose file';
+});
+
+window.updateVisibility = async (id, visibility) => {
+  await supabase.from('documents').update({visibility}).eq('id',id);
+  await logActivity(ctx.user.id,'UPDATED','Documents','Visibility → '+visibility);
+};
+
+window.uploadDoc = async () => {
+  const proj = document.getElementById('n-proj').value;
+  const name = document.getElementById('n-name').value.trim();
+  const file = document.getElementById('n-file').files[0];
+  const vis  = document.getElementById('n-vis').value;
+  const msg  = document.getElementById('new-msg');
+
+  if (!proj||!name||!file) { msg.innerHTML='<div class="alert alert-err">Project, name and file are required.</div>'; return; }
+
+  document.getElementById('upload-btn').disabled = true;
+  document.getElementById('upload-btn').textContent = 'Uploading...';
+
+  try {
+    const ext  = file.name.split('.').pop();
+    const path = `docs/${proj}/${Date.now()}_${name}.${ext}`;
+    const { error: upErr } = await supabase.storage.from('documents').upload(path, file);
+    if (upErr) throw upErr;
+
+    const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(path);
+
+    const { error } = await supabase.from('documents').insert({
+      project_id: proj, uploaded_by: ctx.user.id,
+      file_name: name, original_name: file.name,
+      file_size: file.size, file_type: file.type,
+      storage_path: publicUrl, visibility: vis, status: 'pending'
+    });
+    if (error) throw error;
+    await logActivity(ctx.user.id,'UPLOADED','Documents',name);
+    window.location.reload();
+  } catch(e) {
+    msg.innerHTML=`<div class="alert alert-err">${escHtml(e.message)}</div>`;
+    document.getElementById('upload-btn').disabled = false;
+    document.getElementById('upload-btn').textContent = 'Upload';
+  }
+};
+</script>
+</body>
+</html>

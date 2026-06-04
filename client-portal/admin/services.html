@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Services — NovahFalcons Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, setTopbarActions, fmt, escHtml } from '../assets/shell.js';
+import { supabase, logActivity } from '../assets/supabase.js';
+
+const ctx = await initShell('services');
+if (!ctx) throw new Error('Not auth');
+setTitle('Services');
+
+setTopbarActions(`<button class="tb pr" onclick="openM('modal-new')">+ Add Service</button>`);
+
+const { data: services } = await supabase.from('services').select('*').order('sort_order');
+
+const rows = (services||[]).map(s=>`
+  <tr>
+    <td>${escHtml(s.category||'—')}</td>
+    <td>${escHtml(s.tier||'—')}</td>
+    <td><b>${escHtml(s.name)}</b></td>
+    <td>LKR ${fmt(s.price)}</td>
+    <td>${escHtml(s.price_type||'fixed')}</td>
+    <td><span class="b ${s.is_active?'bg':'br'}">${s.is_active?'Active':'Hidden'}</span></td>
+    <td style="display:flex;gap:6px">
+      <button class="btn btn-sm btn-s" onclick="toggleService('${s.id}',${s.is_active})">${s.is_active?'Hide':'Show'}</button>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--t4);padding:24px">No services yet.</td></tr>';
+
+setContent(`
+  <div class="ph"><div class="pe">Setup</div><div class="pt">Services</div></div>
+  <div class="card" style="padding:0;overflow:auto">
+    <table class="dt">
+      <thead><tr><th>Category</th><th>Tier</th><th>Name</th><th>Price</th><th>Type</th><th>Status</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+
+  <div class="mov" id="modal-new">
+    <div class="mod" style="max-width:500px">
+      <div class="mhd"><div class="mtt">Add Service</div><button class="mcl" onclick="closeM('modal-new')">&#10005;</button></div>
+      <div id="new-msg"></div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Category</label><input class="fin" id="n-cat" placeholder="Websites, Marketing, ERP..."></div>
+        <div class="fgp"><label class="flb">Tier</label><input class="fin" id="n-tier" placeholder="Starter, Growth, Pro..."></div>
+      </div>
+      <div class="fgp"><label class="flb">Service Name</label><input class="fin" id="n-name" placeholder="Growth Website"></div>
+      <div class="fgp"><label class="flb">Description</label><textarea class="fin" id="n-desc" placeholder="Brief description..."></textarea></div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Price (LKR)</label><input class="fin" type="number" id="n-price" placeholder="0"></div>
+        <div class="fgp"><label class="flb">Price Type</label>
+          <select class="fin" id="n-type"><option value="fixed">Fixed</option><option value="monthly">Monthly</option><option value="hourly">Hourly</option></select>
+        </div>
+      </div>
+      <div class="fgp"><label class="flb">Features (one per line)</label><textarea class="fin" id="n-features" placeholder="5-Page Website&#10;Mobile Optimised&#10;Basic SEO" rows="4"></textarea></div>
+      <div class="mft">
+        <button class="btn btn-g" onclick="closeM('modal-new')">Cancel</button>
+        <button class="btn btn-p" onclick="createService()">Add Service</button>
+      </div>
+    </div>
+  </div>
+`);
+
+window.toggleService = async (id, current) => {
+  await supabase.from('services').update({is_active:!current}).eq('id',id);
+  await logActivity(ctx.user.id,current?'HIDDEN':'SHOWN','Services','Service '+id);
+  window.location.reload();
+};
+
+window.createService = async () => {
+  const name = document.getElementById('n-name').value.trim();
+  const msg  = document.getElementById('new-msg');
+  if (!name) { msg.innerHTML='<div class="alert alert-err">Service name is required.</div>'; return; }
+
+  const featuresRaw = document.getElementById('n-features').value.trim();
+  const features = featuresRaw ? featuresRaw.split('\n').map(f=>f.trim()).filter(Boolean) : null;
+
+  const { error } = await supabase.from('services').insert({
+    name, category: document.getElementById('n-cat').value.trim()||null,
+    tier: document.getElementById('n-tier').value.trim()||null,
+    description: document.getElementById('n-desc').value.trim()||null,
+    price: parseFloat(document.getElementById('n-price').value)||0,
+    price_type: document.getElementById('n-type').value,
+    features: features ? JSON.stringify(features) : null
+  });
+  if (error) { msg.innerHTML=`<div class="alert alert-err">${escHtml(error.message)}</div>`; return; }
+  await logActivity(ctx.user.id,'CREATED','Services',name);
+  window.location.reload();
+};
+</script>
+</body>
+</html>

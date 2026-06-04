@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Invoices — NovahFalcons Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, setTopbarActions, fmt, badge, escHtml } from '../assets/shell.js';
+import { supabase, logActivity } from '../assets/supabase.js';
+
+const ctx = await initShell('invoices');
+if (!ctx) throw new Error('Not auth');
+setTitle('Invoices');
+
+setTopbarActions(`<button class="tb pr" onclick="openM('modal-new')">+ New Invoice</button>`);
+
+const [{ data: invoices }, { data: projects }] = await Promise.all([
+  supabase.from('invoices').select('*, client:profiles!invoices_client_id_fkey(full_name,company_name), project:projects(code,title)').order('created_at',{ascending:false}),
+  supabase.from('projects').select('id,code,title,client_id').eq('status','active')
+]);
+
+const rows = (invoices||[]).map(inv=>`
+  <tr>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">${escHtml(inv.invoice_no)}</span></td>
+    <td><b>${escHtml(inv.client?.company_name||inv.client?.full_name||'—')}</b></td>
+    <td>${escHtml(inv.project?.code||'—')}</td>
+    <td>LKR ${fmt(inv.total)}</td>
+    <td>LKR ${fmt(inv.balance_due)}</td>
+    <td>${badge(inv.status)}</td>
+    <td>${inv.due_date||'—'}</td>
+    <td>
+      <select class="fin" style="padding:4px 8px;font-size:12px" onchange="updateStatus('${inv.id}',this.value)">
+        <option value="draft" ${inv.status==='draft'?'selected':''}>Draft</option>
+        <option value="sent" ${inv.status==='sent'?'selected':''}>Sent</option>
+        <option value="paid" ${inv.status==='paid'?'selected':''}>Paid</option>
+        <option value="partially_paid" ${inv.status==='partially_paid'?'selected':''}>Partial</option>
+        <option value="overdue" ${inv.status==='overdue'?'selected':''}>Overdue</option>
+      </select>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--t4);padding:24px">No invoices yet.</td></tr>';
+
+const projOpts = (projects||[]).map(p=>`<option value="${p.id}" data-client="${p.client_id}">${escHtml(p.code)} — ${escHtml(p.title)}</option>`).join('');
+
+setContent(`
+  <div class="ph"><div class="pe">Management</div><div class="pt">Invoices</div></div>
+  <div class="card" style="padding:0;overflow:auto">
+    <table class="dt">
+      <thead><tr><th>Invoice #</th><th>Client</th><th>Project</th><th>Total</th><th>Balance</th><th>Status</th><th>Due Date</th><th>Update</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+
+  <div class="mov" id="modal-new">
+    <div class="mod" style="max-width:520px">
+      <div class="mhd"><div class="mtt">New Invoice</div><button class="mcl" onclick="closeM('modal-new')">&#10005;</button></div>
+      <div id="new-msg"></div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Invoice Number</label><input class="fin" id="n-no" placeholder="INV-001"></div>
+        <div class="fgp"><label class="flb">Project</label><select class="fin" id="n-proj"><option value="">Select project...</option>${projOpts}</select></div>
+      </div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Subtotal (LKR)</label><input class="fin" type="number" id="n-sub" placeholder="0" oninput="calcTotal()"></div>
+        <div class="fgp"><label class="flb">Discount (%)</label><input class="fin" type="number" id="n-disc" placeholder="0" oninput="calcTotal()"></div>
+      </div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Tax (%)</label><input class="fin" type="number" id="n-tax" value="0" oninput="calcTotal()"></div>
+        <div class="fgp"><label class="flb">Advance (%)</label><input class="fin" type="number" id="n-adv" value="50" oninput="calcTotal()"></div>
+      </div>
+      <div class="fgp"><label class="flb">Total (LKR)</label><input class="fin" id="n-total" readonly style="background:var(--bg2);font-weight:700"></div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Due Date</label><input class="fin" type="date" id="n-due"></div>
+        <div class="fgp"><label class="flb">Status</label>
+          <select class="fin" id="n-status"><option value="draft">Draft</option><option value="sent">Sent</option></select>
+        </div>
+      </div>
+      <div class="fgp"><label class="flb">Notes</label><textarea class="fin" id="n-notes" placeholder="Payment terms, bank details..."></textarea></div>
+      <div class="mft">
+        <button class="btn btn-g" onclick="closeM('modal-new')">Cancel</button>
+        <button class="btn btn-p" onclick="createInvoice()">Create Invoice</button>
+      </div>
+    </div>
+  </div>
+`);
+
+window.calcTotal = () => {
+  const sub  = parseFloat(document.getElementById('n-sub').value)||0;
+  const disc = parseFloat(document.getElementById('n-disc').value)||0;
+  const tax  = parseFloat(document.getElementById('n-tax').value)||0;
+  const afterDisc = sub - (sub * disc / 100);
+  const total = afterDisc + (afterDisc * tax / 100);
+  document.getElementById('n-total').value = 'LKR ' + total.toLocaleString();
+};
+
+window.updateStatus = async (id, status) => {
+  await supabase.from('invoices').update({status}).eq('id',id);
+  await logActivity(ctx.user.id,'UPDATED','Invoices','Status → '+status+' for '+id);
+};
+
+window.createInvoice = async () => {
+  const projEl  = document.getElementById('n-proj');
+  const projId  = projEl.value;
+  const clientId = projEl.selectedOptions[0]?.dataset.client;
+  const no      = document.getElementById('n-no').value.trim();
+  const sub     = parseFloat(document.getElementById('n-sub').value)||0;
+  const disc    = parseFloat(document.getElementById('n-disc').value)||0;
+  const tax     = parseFloat(document.getElementById('n-tax').value)||0;
+  const advPct  = parseFloat(document.getElementById('n-adv').value)||50;
+  const msg     = document.getElementById('new-msg');
+
+  if (!no||!projId) { msg.innerHTML='<div class="alert alert-err">Invoice number and project are required.</div>'; return; }
+
+  const afterDisc  = sub - (sub * disc / 100);
+  const taxAmt     = afterDisc * tax / 100;
+  const total      = afterDisc + taxAmt;
+  const advDue     = total * advPct / 100;
+  const balanceDue = total - advDue;
+
+  const { error } = await supabase.from('invoices').insert({
+    invoice_no: no, project_id: projId, client_id: clientId,
+    subtotal: sub, discount_pct: disc, tax_pct: tax, tax_amount: taxAmt,
+    total, advance_pct: advPct, advance_due: advDue, balance_due: balanceDue,
+    due_date: document.getElementById('n-due').value||null,
+    status: document.getElementById('n-status').value,
+    notes: document.getElementById('n-notes').value.trim()||null
+  });
+  if (error) { msg.innerHTML=`<div class="alert alert-err">${escHtml(error.message)}</div>`; return; }
+  await logActivity(ctx.user.id,'CREATED','Invoices',no);
+  window.location.reload();
+};
+</script>
+</body>
+</html>

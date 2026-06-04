@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Payments — NovahFalcons Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, fmt, badge, timeAgo, escHtml } from '../assets/shell.js';
+import { supabase, getPendingPayments, updatePaymentStatus, logActivity } from '../assets/supabase.js';
+
+const ctx = await initShell('payments');
+if (!ctx) throw new Error('Not auth');
+setTitle('Payments');
+
+const [{ data: pending }, { data: all }] = await Promise.all([
+  getPendingPayments(),
+  supabase.from('payments').select('*, client:profiles!payments_client_id_fkey(full_name,company_name), project:projects(code)').order('submitted_at',{ascending:false})
+]);
+
+function payRow(p) {
+  return `<tr>
+    <td><b>${escHtml(p.client?.company_name||p.client?.full_name||'—')}</b></td>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">${escHtml(p.project?.code||'—')}</span></td>
+    <td>LKR ${fmt(p.amount)}</td>
+    <td>${escHtml(p.payment_type||'—')}</td>
+    <td>${timeAgo(p.submitted_at)}</td>
+    <td>${badge(p.status)}</td>
+    <td>
+      ${p.slip_url ? `<a href="${escHtml(p.slip_url)}" target="_blank" class="btn btn-sm btn-s">View Slip</a>` : '—'}
+    </td>
+    <td style="display:flex;gap:6px">
+      ${p.status==='pending' ? `
+        <button class="btn btn-sm btn-ok" onclick="approve('${p.id}')">Approve</button>
+        <button class="btn btn-sm btn-no" onclick="reject('${p.id}')">Reject</button>` : '—'}
+    </td>
+  </tr>`;
+}
+
+const pendingRows = (pending||[]).map(payRow).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--t4);padding:24px">No pending payments.</td></tr>';
+const allRows     = (all||[]).map(payRow).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--t4);padding:24px">No payments yet.</td></tr>';
+
+setContent(`
+  <div class="ph"><div class="pe">Management</div><div class="pt">Payments</div></div>
+
+  ${(pending||[]).length > 0 ? `
+  <div class="card" style="border-left:3px solid var(--amber);margin-bottom:20px">
+    <div class="chd"><div class="ct">Pending Review</div><span class="b bam">${(pending||[]).length} pending</span></div>
+    <div style="overflow:auto">
+      <table class="dt">
+        <thead><tr><th>Client</th><th>Project</th><th>Amount</th><th>Type</th><th>Submitted</th><th>Status</th><th>Slip</th><th>Actions</th></tr></thead>
+        <tbody>${pendingRows}</tbody>
+      </table>
+    </div>
+  </div>` : ''}
+
+  <div class="card" style="padding:0;overflow:auto">
+    <div class="chd" style="padding:16px 20px"><div class="ct">All Payments</div></div>
+    <table class="dt">
+      <thead><tr><th>Client</th><th>Project</th><th>Amount</th><th>Type</th><th>Submitted</th><th>Status</th><th>Slip</th><th>Actions</th></tr></thead>
+      <tbody>${allRows}</tbody>
+    </table>
+  </div>
+`);
+
+window.approve = async (id) => {
+  if (!confirm('Approve this payment?')) return;
+  await updatePaymentStatus(id, 'approved');
+  await logActivity(ctx.user.id,'APPROVED','Payments','Payment '+id);
+  window.location.reload();
+};
+
+window.reject = async (id) => {
+  if (!confirm('Reject this payment?')) return;
+  await updatePaymentStatus(id, 'rejected');
+  await logActivity(ctx.user.id,'REJECTED','Payments','Payment '+id);
+  window.location.reload();
+};
+</script>
+</body>
+</html>

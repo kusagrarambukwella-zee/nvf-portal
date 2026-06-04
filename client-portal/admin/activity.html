@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Activity Log — NovahFalcons Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, timeAgo, escHtml } from '../assets/shell.js';
+import { supabase } from '../assets/supabase.js';
+
+const ctx = await initShell('activity');
+if (!ctx) throw new Error('Not auth');
+setTitle('Activity Log');
+
+const { data: logs } = await supabase
+  .from('activity_log')
+  .select('*, user:profiles(full_name,role)')
+  .order('logged_at', { ascending: false })
+  .limit(200);
+
+const moduleColors = {
+  Auth:'var(--blue)', Projects:'var(--teal)', Clients:'var(--green)',
+  Payments:'var(--amber)', Invoices:'var(--purple,#7c3aed)', Meetings:'var(--teal)',
+  Documents:'var(--t3)', Services:'var(--green)', System:'var(--t4)'
+};
+
+const rows = (logs||[]).map(l=>`
+  <tr>
+    <td style="font-size:11px;color:var(--t3);white-space:nowrap">${new Date(l.logged_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+    <td><b>${escHtml(l.user?.full_name||'System')}</b><div style="font-size:11px;color:var(--t4)">${escHtml(l.user?.role||'')}</div></td>
+    <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${moduleColors[l.module]||'var(--t4)'}22;color:${moduleColors[l.module]||'var(--t3)'}">${escHtml(l.module||'—')}</span></td>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--t2)">${escHtml(l.action)}</span></td>
+    <td style="font-size:12px;color:var(--t3)">${escHtml(l.detail||'—')}</td>
+    <td style="font-size:11px;color:var(--t4)">${timeAgo(l.logged_at)}</td>
+  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--t4);padding:24px">No activity yet.</td></tr>';
+
+setContent(`
+  <div class="ph"><div class="pe">Setup</div><div class="pt">Activity Log</div></div>
+  <div class="card" style="padding:0;overflow:auto">
+    <table class="dt">
+      <thead><tr><th>Time</th><th>User</th><th>Module</th><th>Action</th><th>Detail</th><th>When</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+`);
+</script>
+</body>
+</html>

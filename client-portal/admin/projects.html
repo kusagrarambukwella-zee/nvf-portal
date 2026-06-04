@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Projects — NovahFalcons Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, setTopbarActions, fmt, badge, progressBar, escHtml } from '../assets/shell.js';
+import { supabase, logActivity } from '../assets/supabase.js';
+
+const ctx = await initShell('projects');
+if (!ctx) throw new Error('Not auth');
+setTitle('Projects');
+
+setTopbarActions(`<button class="tb pr" onclick="openM('modal-new')">+ New Project</button>`);
+
+const [{ data: projects }, { data: clients }, { data: managers }] = await Promise.all([
+  supabase.from('projects').select('*, client:profiles!projects_client_id_fkey(full_name,company_name), manager:profiles!projects_manager_id_fkey(full_name)').order('updated_at',{ascending:false}),
+  supabase.from('profiles').select('id,full_name,company_name').eq('role','client'),
+  supabase.from('profiles').select('id,full_name').eq('role','admin')
+]);
+
+function renderRows(list) {
+  return (list||[]).map(p=>`
+    <tr>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">${escHtml(p.code)}</span></td>
+      <td><b>${escHtml(p.client?.company_name||'—')}</b><div style="font-size:11px;color:var(--t3)">${escHtml(p.client?.full_name||'')}</div></td>
+      <td>${escHtml(p.title)}</td>
+      <td>${escHtml(p.manager?.full_name||'—')}</td>
+      <td>Stg ${p.stage}/18</td>
+      <td style="min-width:90px">${progressBar(p.progress)}<div style="font-size:10px;color:var(--t4);margin-top:2px">${p.progress}%</div></td>
+      <td>${badge(p.status)}</td>
+      <td><span class="risk r${(p.risk||'low')[0]}">${p.risk||'low'}</span></td>
+      <td>LKR ${fmt(p.contract_value)}</td>
+      <td>
+        <button class="btn btn-sm btn-s" onclick="editProject('${p.id}')">Edit</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--t4);padding:24px">No projects yet.</td></tr>';
+}
+
+const clientOpts = (clients||[]).map(c=>`<option value="${c.id}">${escHtml(c.company_name||c.full_name)}</option>`).join('');
+const managerOpts = (managers||[]).map(m=>`<option value="${m.id}">${escHtml(m.full_name)}</option>`).join('');
+
+setContent(`
+  <div class="ph"><div class="pe">Overview</div><div class="pt">All Projects</div></div>
+  <div class="card" style="padding:0;overflow:auto">
+    <table class="dt">
+      <thead><tr><th>Code</th><th>Client</th><th>Title</th><th>Manager</th><th>Stage</th><th>Progress</th><th>Status</th><th>Risk</th><th>Value</th><th></th></tr></thead>
+      <tbody id="proj-body">${renderRows(projects)}</tbody>
+    </table>
+  </div>
+
+  <!-- New Project Modal -->
+  <div class="mov" id="modal-new">
+    <div class="mod" style="max-width:560px">
+      <div class="mhd"><div class="mtt">New Project</div><button class="mcl" onclick="closeM('modal-new')">&#10005;</button></div>
+      <div id="new-msg"></div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Project Code</label><input class="fin" id="n-code" placeholder="NVF-001"></div>
+        <div class="fgp"><label class="flb">Title</label><input class="fin" id="n-title" placeholder="Project title"></div>
+      </div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Client</label><select class="fin" id="n-client"><option value="">Select client...</option>${clientOpts}</select></div>
+        <div class="fgp"><label class="flb">Manager</label><select class="fin" id="n-mgr"><option value="">Select manager...</option>${managerOpts}</select></div>
+      </div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Contract Value (LKR)</label><input class="fin" type="number" id="n-value" placeholder="0"></div>
+        <div class="fgp"><label class="flb">Advance Paid (LKR)</label><input class="fin" type="number" id="n-advance" placeholder="0"></div>
+      </div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Start Date</label><input class="fin" type="date" id="n-start"></div>
+        <div class="fgp"><label class="flb">Estimated End</label><input class="fin" type="date" id="n-end"></div>
+      </div>
+      <div class="fgp"><label class="flb">Description</label><textarea class="fin" id="n-desc" placeholder="Brief description..."></textarea></div>
+      <div class="mft">
+        <button class="btn btn-g" onclick="closeM('modal-new')">Cancel</button>
+        <button class="btn btn-p" onclick="createProject()">Create Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="mov" id="modal-edit">
+    <div class="mod" style="max-width:560px">
+      <div class="mhd"><div class="mtt">Edit Project</div><button class="mcl" onclick="closeM('modal-edit')">&#10005;</button></div>
+      <div id="edit-msg"></div>
+      <input type="hidden" id="e-id">
+      <div class="g2">
+        <div class="fgp"><label class="flb">Stage (1–18)</label><input class="fin" type="number" id="e-stage" min="1" max="18"></div>
+        <div class="fgp"><label class="flb">Progress (%)</label><input class="fin" type="number" id="e-progress" min="0" max="100"></div>
+      </div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Status</label>
+          <select class="fin" id="e-status">
+            <option value="active">Active</option><option value="completed">Completed</option>
+            <option value="paused">Paused</option><option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="fgp"><label class="flb">Risk</label>
+          <select class="fin" id="e-risk">
+            <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+          </select>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Balance Due (LKR)</label><input class="fin" type="number" id="e-balance"></div>
+        <div class="fgp"><label class="flb">Advance Paid (LKR)</label><input class="fin" type="number" id="e-advance"></div>
+      </div>
+      <div class="fgp"><label class="flb">Notes</label><textarea class="fin" id="e-notes"></textarea></div>
+      <div class="mft">
+        <button class="btn btn-g" onclick="closeM('modal-edit')">Cancel</button>
+        <button class="btn btn-p" onclick="saveEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+`);
+
+const projectMap = {};
+(projects||[]).forEach(p => projectMap[p.id] = p);
+
+window.editProject = (id) => {
+  const p = projectMap[id];
+  if (!p) return;
+  document.getElementById('e-id').value = id;
+  document.getElementById('e-stage').value = p.stage;
+  document.getElementById('e-progress').value = p.progress;
+  document.getElementById('e-status').value = p.status;
+  document.getElementById('e-risk').value = p.risk;
+  document.getElementById('e-balance').value = p.balance_due;
+  document.getElementById('e-advance').value = p.advance_paid;
+  document.getElementById('e-notes').value = p.notes||'';
+  openM('modal-edit');
+};
+
+window.saveEdit = async () => {
+  const id = document.getElementById('e-id').value;
+  const { error } = await supabase.from('projects').update({
+    stage:    parseInt(document.getElementById('e-stage').value),
+    progress: parseInt(document.getElementById('e-progress').value),
+    status:   document.getElementById('e-status').value,
+    risk:     document.getElementById('e-risk').value,
+    balance_due:  parseFloat(document.getElementById('e-balance').value)||0,
+    advance_paid: parseFloat(document.getElementById('e-advance').value)||0,
+    notes:    document.getElementById('e-notes').value,
+    updated_at: new Date().toISOString()
+  }).eq('id', id);
+  if (error) { document.getElementById('edit-msg').innerHTML = `<div class="alert alert-err">${escHtml(error.message)}</div>`; return; }
+  await logActivity(ctx.user.id,'UPDATED','Projects','Project ID '+id);
+  window.location.reload();
+};
+
+window.createProject = async () => {
+  const code    = document.getElementById('n-code').value.trim();
+  const title   = document.getElementById('n-title').value.trim();
+  const client  = document.getElementById('n-client').value;
+  const manager = document.getElementById('n-mgr').value;
+  const value   = parseFloat(document.getElementById('n-value').value)||0;
+  const advance = parseFloat(document.getElementById('n-advance').value)||0;
+  const msg     = document.getElementById('new-msg');
+
+  if (!code||!title||!client||!manager) { msg.innerHTML='<div class="alert alert-err">Please fill all required fields.</div>'; return; }
+
+  const { error } = await supabase.from('projects').insert({
+    code, title, client_id: client, manager_id: manager,
+    contract_value: value, advance_paid: advance, balance_due: value - advance,
+    start_date: document.getElementById('n-start').value||null,
+    estimated_end: document.getElementById('n-end').value||null,
+    description: document.getElementById('n-desc').value.trim()||null
+  });
+  if (error) { msg.innerHTML=`<div class="alert alert-err">${escHtml(error.message)}</div>`; return; }
+  await logActivity(ctx.user.id,'CREATED','Projects',code);
+  window.location.reload();
+};
+</script>
+</body>
+</html>

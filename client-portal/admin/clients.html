@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Clients — NovahFalcons Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, setTopbarActions, escHtml } from '../assets/shell.js';
+import { supabase, logActivity } from '../assets/supabase.js';
+
+const ctx = await initShell('clients');
+if (!ctx) throw new Error('Not auth');
+setTitle('Clients');
+
+setTopbarActions(`<button class="tb pr" onclick="openM('modal-invite')">+ Invite Client</button>`);
+
+const { data: clients } = await supabase
+  .from('profiles').select('*, projects:projects(id)')
+  .eq('role','client').order('created_at',{ascending:false});
+
+const rows = (clients||[]).map(c=>`
+  <tr>
+    <td>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--teal-lt);color:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">${escHtml((c.avatar||c.full_name.slice(0,2)).toUpperCase())}</div>
+        <div><div style="font-weight:600;font-size:13px">${escHtml(c.full_name)}</div></div>
+      </div>
+    </td>
+    <td>${escHtml(c.company_name||'—')}</td>
+    <td>${escHtml(c.phone||'—')}</td>
+    <td>${(c.projects||[]).length} project${(c.projects||[]).length!==1?'s':''}</td>
+    <td><span class="b ${c.is_active?'bg':'br'}">${c.is_active?'Active':'Inactive'}</span></td>
+    <td><button class="btn btn-sm btn-s" onclick="toggleActive('${c.id}',${c.is_active})">${c.is_active?'Deactivate':'Activate'}</button></td>
+  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--t4);padding:24px">No clients yet.</td></tr>';
+
+setContent(`
+  <div class="ph"><div class="pe">Management</div><div class="pt">Clients</div></div>
+  <div class="card" style="padding:0;overflow:auto">
+    <table class="dt">
+      <thead><tr><th>Name</th><th>Company</th><th>Phone</th><th>Projects</th><th>Status</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+
+  <div class="mov" id="modal-invite">
+    <div class="mod" style="max-width:440px">
+      <div class="mhd"><div class="mtt">Invite Client</div><button class="mcl" onclick="closeM('modal-invite')">&#10005;</button></div>
+      <div id="inv-msg"></div>
+      <p style="font-size:13px;color:var(--t3);margin-bottom:16px">Send a magic link invitation. The client will set their own password on first login.</p>
+      <div class="fgp"><label class="flb">Full Name</label><input class="fin" id="inv-name" placeholder="John Silva"></div>
+      <div class="fgp"><label class="flb">Company Name</label><input class="fin" id="inv-company" placeholder="Silva Holdings"></div>
+      <div class="fgp"><label class="flb">Email Address</label><input class="fin" type="email" id="inv-email" placeholder="john@company.com"></div>
+      <div class="fgp"><label class="flb">Phone</label><input class="fin" id="inv-phone" placeholder="+94 77 000 0000"></div>
+      <div class="mft">
+        <button class="btn btn-g" onclick="closeM('modal-invite')">Cancel</button>
+        <button class="btn btn-p" onclick="inviteClient()">Send Invitation</button>
+      </div>
+    </div>
+  </div>
+`);
+
+window.toggleActive = async (id, current) => {
+  if (!confirm(`${current?'Deactivate':'Activate'} this client?`)) return;
+  await supabase.from('profiles').update({is_active:!current}).eq('id',id);
+  await logActivity(ctx.user.id, current?'DEACTIVATED':'ACTIVATED','Clients','Profile '+id);
+  window.location.reload();
+};
+
+window.inviteClient = async () => {
+  const name    = document.getElementById('inv-name').value.trim();
+  const company = document.getElementById('inv-company').value.trim();
+  const email   = document.getElementById('inv-email').value.trim();
+  const phone   = document.getElementById('inv-phone').value.trim();
+  const msg     = document.getElementById('inv-msg');
+  if (!name||!email) { msg.innerHTML='<div class="alert alert-err">Name and email are required.</div>'; return; }
+
+  const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
+    data: { full_name: name, company_name: company, phone, role: 'client' }
+  });
+  if (error) { msg.innerHTML=`<div class="alert alert-err">${escHtml(error.message)}</div>`; return; }
+  await logActivity(ctx.user.id,'INVITED','Clients',email);
+  msg.innerHTML='<div class="alert alert-ok">&#10003; Invitation sent to '+escHtml(email)+'</div>';
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Meetings — NovahFalcons Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, setTopbarActions, badge, escHtml } from '../assets/shell.js';
+import { supabase, logActivity } from '../assets/supabase.js';
+
+const ctx = await initShell('meetings');
+if (!ctx) throw new Error('Not auth');
+setTitle('Meetings');
+
+setTopbarActions(`<button class="tb pr" onclick="openM('modal-new')">+ Schedule Meeting</button>`);
+
+const [{ data: meetings }, { data: projects }] = await Promise.all([
+  supabase.from('meetings').select('*, project:projects(code,title,client:profiles!projects_client_id_fkey(company_name))').order('meeting_date',{ascending:false}),
+  supabase.from('projects').select('id,code,title').eq('status','active')
+]);
+
+const rows = (meetings||[]).map(m=>`
+  <tr>
+    <td><b>${escHtml(m.title)}</b></td>
+    <td>${escHtml(m.project?.client?.company_name||'—')}</td>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal)">${escHtml(m.project?.code||'—')}</span></td>
+    <td>${m.meeting_date} ${m.meeting_time?.slice(0,5)}</td>
+    <td>${m.duration_min} min</td>
+    <td>${escHtml(m.platform?.replace('_',' ')||'—')}</td>
+    <td>${badge(m.status)}</td>
+    <td>
+      ${m.meeting_link ? `<a href="${escHtml(m.meeting_link)}" target="_blank" class="btn btn-sm btn-s">Join</a>` : '—'}
+    </td>
+    <td>
+      <select class="fin" style="padding:4px 8px;font-size:12px" onchange="updateStatus('${m.id}',this.value)">
+        <option value="upcoming" ${m.status==='upcoming'?'selected':''}>Upcoming</option>
+        <option value="completed" ${m.status==='completed'?'selected':''}>Completed</option>
+        <option value="cancelled" ${m.status==='cancelled'?'selected':''}>Cancelled</option>
+      </select>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--t4);padding:24px">No meetings scheduled.</td></tr>';
+
+const projOpts = (projects||[]).map(p=>`<option value="${p.id}">${escHtml(p.code)} — ${escHtml(p.title)}</option>`).join('');
+
+setContent(`
+  <div class="ph"><div class="pe">Management</div><div class="pt">Meetings</div></div>
+  <div class="card" style="padding:0;overflow:auto">
+    <table class="dt">
+      <thead><tr><th>Title</th><th>Client</th><th>Project</th><th>Date & Time</th><th>Duration</th><th>Platform</th><th>Status</th><th>Link</th><th>Update</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+
+  <div class="mov" id="modal-new">
+    <div class="mod" style="max-width:500px">
+      <div class="mhd"><div class="mtt">Schedule Meeting</div><button class="mcl" onclick="closeM('modal-new')">&#10005;</button></div>
+      <div id="new-msg"></div>
+      <div class="fgp"><label class="flb">Title</label><input class="fin" id="n-title" placeholder="Kickoff Meeting"></div>
+      <div class="fgp"><label class="flb">Project</label>
+        <select class="fin" id="n-proj"><option value="">Select project...</option>${projOpts}</select>
+      </div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Date</label><input class="fin" type="date" id="n-date"></div>
+        <div class="fgp"><label class="flb">Time</label><input class="fin" type="time" id="n-time"></div>
+      </div>
+      <div class="g2">
+        <div class="fgp"><label class="flb">Duration (min)</label><input class="fin" type="number" id="n-dur" value="60"></div>
+        <div class="fgp"><label class="flb">Platform</label>
+          <select class="fin" id="n-platform">
+            <option value="google_meet">Google Meet</option>
+            <option value="zoom">Zoom</option>
+            <option value="teams">Microsoft Teams</option>
+            <option value="in_person">In Person</option>
+          </select>
+        </div>
+      </div>
+      <div class="fgp"><label class="flb">Meeting Link</label><input class="fin" id="n-link" placeholder="https://meet.google.com/..."></div>
+      <div class="fgp"><label class="flb">Agenda</label><textarea class="fin" id="n-agenda" placeholder="Topics to discuss..."></textarea></div>
+      <div class="mft">
+        <button class="btn btn-g" onclick="closeM('modal-new')">Cancel</button>
+        <button class="btn btn-p" onclick="createMeeting()">Schedule</button>
+      </div>
+    </div>
+  </div>
+`);
+
+window.updateStatus = async (id, status) => {
+  await supabase.from('meetings').update({status}).eq('id',id);
+  await logActivity(ctx.user.id,'UPDATED','Meetings','Status → '+status);
+};
+
+window.createMeeting = async () => {
+  const title = document.getElementById('n-title').value.trim();
+  const proj  = document.getElementById('n-proj').value;
+  const date  = document.getElementById('n-date').value;
+  const time  = document.getElementById('n-time').value;
+  const msg   = document.getElementById('new-msg');
+
+  if (!title||!proj||!date||!time) { msg.innerHTML='<div class="alert alert-err">Title, project, date and time are required.</div>'; return; }
+
+  const { error } = await supabase.from('meetings').insert({
+    title, project_id: proj,
+    meeting_date: date, meeting_time: time,
+    duration_min: parseInt(document.getElementById('n-dur').value)||60,
+    platform: document.getElementById('n-platform').value,
+    meeting_link: document.getElementById('n-link').value.trim()||null,
+    agenda: document.getElementById('n-agenda').value.trim()||null,
+    created_by: ctx.user.id
+  });
+  if (error) { msg.innerHTML=`<div class="alert alert-err">${escHtml(error.message)}</div>`; return; }
+  await logActivity(ctx.user.id,'SCHEDULED','Meetings',title);
+  window.location.reload();
+};
+</script>
+</body>
+</html>
