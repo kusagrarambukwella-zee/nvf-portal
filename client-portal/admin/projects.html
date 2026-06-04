@@ -37,8 +37,9 @@ function renderRows(list) {
       <td>${badge(p.status)}</td>
       <td><span class="risk r${(p.risk||'low')[0]}">${p.risk||'low'}</span></td>
       <td>LKR ${fmt(p.contract_value)}</td>
-      <td>
+      <td style="display:flex;gap:6px">
         <button class="btn btn-sm btn-s" onclick="editProject('${p.id}')">Edit</button>
+        <button class="btn btn-sm btn-no" onclick="deleteProject('${p.id}','${escHtml(p.code)}')">Delete</button>
       </td>
     </tr>`).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--t4);padding:24px">No projects yet.</td></tr>';
 }
@@ -151,6 +152,14 @@ window.saveEdit = async () => {
   }).eq('id', id);
   if (error) { document.getElementById('edit-msg').innerHTML = `<div class="alert alert-err">${escHtml(error.message)}</div>`; return; }
   await logActivity(ctx.user.id,'UPDATED','Projects','Project ID '+id);
+  window.location.reload();
+};
+
+window.deleteProject = async (id, code) => {
+  if (!confirm(`Delete project ${code}? This cannot be undone.`)) return;
+  const { error } = await supabase.from('projects').delete().eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
+  await logActivity(ctx.user.id, 'DELETED', 'Projects', code);
   window.location.reload();
 };
 

@@ -36,12 +36,13 @@ const rows = (meetings||[]).map(m=>`
     <td>
       ${m.meeting_link ? `<a href="${escHtml(m.meeting_link)}" target="_blank" class="btn btn-sm btn-s">Join</a>` : '—'}
     </td>
-    <td>
+    <td style="display:flex;gap:6px;align-items:center">
       <select class="fin" style="padding:4px 8px;font-size:12px" onchange="updateStatus('${m.id}',this.value)">
         <option value="upcoming" ${m.status==='upcoming'?'selected':''}>Upcoming</option>
         <option value="completed" ${m.status==='completed'?'selected':''}>Completed</option>
         <option value="cancelled" ${m.status==='cancelled'?'selected':''}>Cancelled</option>
       </select>
+      <button class="btn btn-sm btn-no" onclick="deleteMeeting('${m.id}','${escHtml(m.title)}')">Delete</button>
     </td>
   </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--t4);padding:24px">No meetings scheduled.</td></tr>';
 
@@ -88,6 +89,14 @@ setContent(`
     </div>
   </div>
 `);
+
+window.deleteMeeting = async (id, title) => {
+  if (!confirm(`Delete meeting "${title}"?`)) return;
+  const { error } = await supabase.from('meetings').delete().eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
+  await logActivity(ctx.user.id, 'DELETED', 'Meetings', title);
+  window.location.reload();
+};
 
 window.updateStatus = async (id, status) => {
   await supabase.from('meetings').update({status}).eq('id',id);

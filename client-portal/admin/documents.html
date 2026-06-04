@@ -40,6 +40,7 @@ const rows = (docs||[]).map(d=>`
         <option value="client" ${d.visibility==='client'?'selected':''}>Client</option>
         <option value="signed" ${d.visibility==='signed'?'selected':''}>Signed</option>
       </select>
+      <button class="btn btn-sm btn-no" onclick="deleteDoc('${d.id}','${escHtml(d.file_name)}')">Delete</button>
     </td>
   </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--t4);padding:24px">No documents yet.</td></tr>';
 
@@ -89,6 +90,14 @@ setContent(`
 document.getElementById('n-file')?.addEventListener('change', function() {
   document.getElementById('file-label').textContent = this.files[0]?.name || 'Click to choose file';
 });
+
+window.deleteDoc = async (id, name) => {
+  if (!confirm(`Delete document "${name}"?`)) return;
+  const { error } = await supabase.from('documents').delete().eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
+  await logActivity(ctx.user.id, 'DELETED', 'Documents', name);
+  window.location.reload();
+};
 
 window.updateVisibility = async (id, visibility) => {
   await supabase.from('documents').update({visibility}).eq('id',id);

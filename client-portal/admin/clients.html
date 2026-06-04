@@ -41,7 +41,10 @@ const rows = (clients||[]).map(c=>`
     <td>${escHtml(c.phone||'—')}</td>
     <td>${countMap[c.id]||0} project${(countMap[c.id]||0)!==1?'s':''}</td>
     <td><span class="b ${c.is_active?'bg':'br'}">${c.is_active?'Active':'Inactive'}</span></td>
-    <td><button class="btn btn-sm btn-s" onclick="toggleActive('${c.id}',${c.is_active})">${c.is_active?'Deactivate':'Activate'}</button></td>
+    <td style="display:flex;gap:6px">
+      <button class="btn btn-sm btn-s" onclick="toggleActive('${c.id}',${c.is_active})">${c.is_active?'Deactivate':'Activate'}</button>
+      <button class="btn btn-sm btn-no" onclick="deleteClient('${c.id}','${escHtml(c.full_name)}')">Delete</button>
+    </td>
   </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--t4);padding:24px">No clients yet.</td></tr>';
 
 setContent(`
@@ -70,6 +73,14 @@ setContent(`
     </div>
   </div>
 `);
+
+window.deleteClient = async (id, name) => {
+  if (!confirm(`Delete client "${name}"? This will remove their profile and cannot be undone.\n\nNote: Also delete them from Supabase Auth → Users.`)) return;
+  const { error } = await supabase.from('profiles').delete().eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
+  await logActivity(ctx.user.id, 'DELETED', 'Clients', name);
+  window.location.reload();
+};
 
 window.toggleActive = async (id, current) => {
   if (!confirm(`${current?'Deactivate':'Activate'} this client?`)) return;

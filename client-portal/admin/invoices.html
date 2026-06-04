@@ -33,7 +33,7 @@ const rows = (invoices||[]).map(inv=>`
     <td>LKR ${fmt(inv.balance_due)}</td>
     <td>${badge(inv.status)}</td>
     <td>${inv.due_date||'—'}</td>
-    <td>
+    <td style="display:flex;gap:6px;align-items:center">
       <select class="fin" style="padding:4px 8px;font-size:12px" onchange="updateStatus('${inv.id}',this.value)">
         <option value="draft" ${inv.status==='draft'?'selected':''}>Draft</option>
         <option value="sent" ${inv.status==='sent'?'selected':''}>Sent</option>
@@ -41,6 +41,7 @@ const rows = (invoices||[]).map(inv=>`
         <option value="partially_paid" ${inv.status==='partially_paid'?'selected':''}>Partial</option>
         <option value="overdue" ${inv.status==='overdue'?'selected':''}>Overdue</option>
       </select>
+      <button class="btn btn-sm btn-no" onclick="deleteInvoice('${inv.id}','${escHtml(inv.invoice_no)}')">Delete</button>
     </td>
   </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--t4);padding:24px">No invoices yet.</td></tr>';
 
@@ -94,6 +95,14 @@ window.calcTotal = () => {
   const afterDisc = sub - (sub * disc / 100);
   const total = afterDisc + (afterDisc * tax / 100);
   document.getElementById('n-total').value = 'LKR ' + total.toLocaleString();
+};
+
+window.deleteInvoice = async (id, no) => {
+  if (!confirm(`Delete invoice ${no}? This cannot be undone.`)) return;
+  const { error } = await supabase.from('invoices').delete().eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
+  await logActivity(ctx.user.id, 'DELETED', 'Invoices', no);
+  window.location.reload();
 };
 
 window.updateStatus = async (id, status) => {
