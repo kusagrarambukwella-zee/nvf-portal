@@ -31,7 +31,7 @@ function payRow(p) {
     <td>${timeAgo(p.submitted_at)}</td>
     <td>${badge(p.status)}</td>
     <td>
-      ${p.slip_url ? `<a href="${escHtml(p.slip_url)}" target="_blank" class="btn btn-sm btn-s">View Slip</a>` : '—'}
+      ${p.slip_url ? `<button class="btn btn-sm btn-s" onclick="viewSlip('${escHtml(p.slip_url)}')">View Slip</button>` : '—'}
     </td>
     <td style="display:flex;gap:6px">
       ${p.status==='pending' ? `
@@ -66,6 +66,18 @@ setContent(`
     </table>
   </div>
 `);
+
+window.viewSlip = async (slipUrl) => {
+  // Extract the storage path from the URL
+  const match = slipUrl.match(/payment-slips\/(.+)$/);
+  if (!match) { window.open(slipUrl, '_blank'); return; }
+  const path = match[1];
+  const { data, error } = await supabase.storage
+    .from('payment-slips')
+    .createSignedUrl(path, 60); // 60 second signed URL
+  if (error || !data?.signedUrl) { alert('Could not load slip: ' + (error?.message||'unknown error')); return; }
+  window.open(data.signedUrl, '_blank');
+};
 
 window.approve = async (id) => {
   if (!confirm('Approve this payment?')) return;
