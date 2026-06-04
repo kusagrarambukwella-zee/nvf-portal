@@ -14,11 +14,14 @@ import { initShell, setTitle, setContent, escHtml, timeAgo } from '../assets/she
 import { supabase, getMyProject, getMessages, sendMessage, subscribeToMessages, logActivity } from '../assets/supabase.js';
 
 const ctx = await initShell('chat');
-if (!ctx) return;
+if (!ctx) throw new Error('Not auth');
 setTitle('Team Chat');
 
 const { data: proj } = await getMyProject(ctx.user.id);
-if (!proj) { setContent('<div class="alert alert-info">No active project.</div>'); return; }
+
+if (!proj) {
+  setContent('<div class="ph"><div class="pe">Communication</div><div class="pt">Team Chat</div></div><div class="alert alert-info">No active project assigned yet.</div>');
+} else {
 
 setContent(`
   <div class="ph"><div class="pe">Communication</div><div class="pt">Team Chat</div></div>
@@ -87,6 +90,7 @@ window.doSend = async () => {
 };
 
 document.getElementById('cii').addEventListener('keypress', e => { if(e.key==='Enter') doSend(); });
+} // end else
 </script>
 </body>
 </html>
