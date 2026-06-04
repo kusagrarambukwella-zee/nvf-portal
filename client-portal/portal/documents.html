@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Documents — NovahFalcons Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, badge, timeAgo, escHtml } from '../assets/shell.js';
+import { getMyProject, getDocuments } from '../assets/supabase.js';
+
+const ctx = await initShell('documents');
+if (!ctx) throw new Error('Not auth');
+setTitle('Documents');
+
+const { data: proj } = await getMyProject(ctx.user.id);
+
+if (!proj) {
+  setContent(`
+    <div class="ph"><div class="pe">My Portal</div><div class="pt">Documents</div></div>
+    <div class="alert alert-info">&#9432; No active project assigned yet.</div>
+  `);
+} else {
+
+const { data: docs } = await getDocuments(proj.id);
+
+const iconMap = { pdf:'📄', doc:'📝', docx:'📝', png:'🖼️', jpg:'🖼️', jpeg:'🖼️', xlsx:'📊', xls:'📊' };
+
+const cards = (docs||[]).map(d => {
+  const ext = d.original_name?.split('.').pop()?.toLowerCase() || '';
+  const icon = iconMap[ext] || '📎';
+  return `
+    <div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+      <div style="font-size:28px;flex-shrink:0">${icon}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;margin-bottom:2px">${escHtml(d.file_name)}</div>
+        <div style="font-size:11px;color:var(--t4)">${d.file_size?Math.round(d.file_size/1024)+' KB · ':''} ${timeAgo(d.uploaded_at)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${badge(d.visibility)}
+        ${d.storage_path?`<a href="${escHtml(d.storage_path)}" target="_blank" class="btn btn-sm btn-s">Download</a>`:''}
+      </div>
+    </div>`;
+}).join('') || '<div style="color:var(--t4);font-size:13px;text-align:center;padding:32px">No documents shared yet.</div>';
+
+setContent(`
+  <div class="ph"><div class="pe">My Portal</div><div class="pt">Documents</div></div>
+  ${cards}
+`);
+} // end else
+</script>
+</body>
+</html>

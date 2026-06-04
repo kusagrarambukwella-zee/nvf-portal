@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Invoices — NovahFalcons Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, fmt, badge, escHtml } from '../assets/shell.js';
+import { getMyProject, getInvoices } from '../assets/supabase.js';
+
+const ctx = await initShell('invoices');
+if (!ctx) throw new Error('Not auth');
+setTitle('Invoices');
+
+const { data: proj } = await getMyProject(ctx.user.id);
+
+if (!proj) {
+  setContent(`
+    <div class="ph"><div class="pe">My Portal</div><div class="pt">Invoices</div></div>
+    <div class="alert alert-info">&#9432; No active project assigned yet.</div>
+  `);
+} else {
+
+const { data: invoices } = await getInvoices(proj.id);
+
+const rows = (invoices||[]).map(inv => `
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);margin-bottom:3px">${escHtml(inv.invoice_no)}</div>
+        <div style="font-size:16px;font-weight:700">LKR ${fmt(inv.total)}</div>
+        ${inv.due_date?`<div style="font-size:12px;color:var(--t3);margin-top:2px">Due: ${inv.due_date}</div>`:''}
+      </div>
+      <div style="text-align:right">${badge(inv.status)}</div>
+    </div>
+    <div style="height:1px;background:var(--border);margin:12px 0"></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:12px">
+      <div><div style="color:var(--t4)">Subtotal</div><div style="font-weight:600;margin-top:2px">LKR ${fmt(inv.subtotal)}</div></div>
+      <div><div style="color:var(--t4)">Advance Due</div><div style="font-weight:600;margin-top:2px;color:var(--amber)">LKR ${fmt(inv.advance_due)}</div></div>
+      <div><div style="color:var(--t4)">Balance Due</div><div style="font-weight:600;margin-top:2px;color:var(--red,#dc2626)">LKR ${fmt(inv.balance_due)}</div></div>
+    </div>
+    ${inv.notes?`<div style="margin-top:10px;font-size:12px;color:var(--t3)">${escHtml(inv.notes)}</div>`:''}
+  </div>`).join('') || '<div style="color:var(--t4);font-size:13px;text-align:center;padding:24px">No invoices yet.</div>';
+
+setContent(`
+  <div class="ph"><div class="pe">My Portal</div><div class="pt">Invoices</div></div>
+  ${rows}
+`);
+} // end else
+</script>
+</body>
+</html>

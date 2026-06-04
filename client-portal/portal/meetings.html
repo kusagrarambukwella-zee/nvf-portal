@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Meetings — NovahFalcons Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, badge, escHtml } from '../assets/shell.js';
+import { getMyProject, getMeetings } from '../assets/supabase.js';
+
+const ctx = await initShell('meetings');
+if (!ctx) throw new Error('Not auth');
+setTitle('Meetings');
+
+const { data: proj } = await getMyProject(ctx.user.id);
+
+if (!proj) {
+  setContent(`
+    <div class="ph"><div class="pe">My Portal</div><div class="pt">Meetings</div></div>
+    <div class="alert alert-info">&#9432; No active project assigned yet.</div>
+  `);
+} else {
+
+const { data: meetings } = await getMeetings(proj.id);
+const upcoming = (meetings||[]).filter(m => m.status === 'upcoming' && new Date(m.meeting_date) >= new Date());
+const past     = (meetings||[]).filter(m => m.status !== 'upcoming' || new Date(m.meeting_date) < new Date());
+
+function meetingCard(m) {
+  const d = new Date(m.meeting_date);
+  return `
+    <div class="card" style="margin-bottom:12px;${m.status==='upcoming'?'border-left:3px solid var(--teal)':''}">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="text-align:center;background:var(--teal-lt);border-radius:8px;padding:8px 12px;flex-shrink:0">
+          <div style="font-size:22px;font-weight:800;color:var(--teal);line-height:1">${d.getDate()}</div>
+          <div style="font-size:11px;color:var(--teal);font-weight:600">${d.toLocaleDateString('en-GB',{month:'short'})}</div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;margin-bottom:3px">${escHtml(m.title)}</div>
+          <div style="font-size:12px;color:var(--t3)">${m.meeting_time?.slice(0,5)||''} · ${m.duration_min} min · ${escHtml(m.platform?.replace('_',' ')||'')}</div>
+          ${m.agenda?`<div style="font-size:12px;color:var(--t4);margin-top:4px">${escHtml(m.agenda)}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          ${badge(m.status)}
+          ${m.meeting_link&&m.status==='upcoming'?`<a href="${escHtml(m.meeting_link)}" target="_blank" class="btn btn-p btn-sm">Join Meeting</a>`:''}
+        </div>
+      </div>
+    </div>`;
+}
+
+setContent(`
+  <div class="ph"><div class="pe">My Portal</div><div class="pt">Meetings</div></div>
+  ${upcoming.length ? `
+    <div style="font-size:11px;font-weight:700;color:var(--teal);letter-spacing:.08em;margin-bottom:10px">UPCOMING</div>
+    ${upcoming.map(meetingCard).join('')}` : ''}
+  ${past.length ? `
+    <div style="font-size:11px;font-weight:700;color:var(--t4);letter-spacing:.08em;margin:16px 0 10px">PAST MEETINGS</div>
+    ${past.map(meetingCard).join('')}` : ''}
+  ${!meetings?.length ? '<div style="color:var(--t4);font-size:13px;text-align:center;padding:32px">No meetings scheduled yet.</div>' : ''}
+`);
+} // end else
+</script>
+</body>
+</html>

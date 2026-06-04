@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sign-Off — NovahFalcons Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/portal.css">
+<style>@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initShell, setTitle, setContent, badge, escHtml } from '../assets/shell.js';
+import { getMyProject, supabase, logActivity } from '../assets/supabase.js';
+
+const ctx = await initShell('signoff');
+if (!ctx) throw new Error('Not auth');
+setTitle('Sign-Off');
+
+const { data: proj } = await getMyProject(ctx.user.id);
+
+if (!proj) {
+  setContent(`
+    <div class="ph"><div class="pe">My Portal</div><div class="pt">Sign-Off</div></div>
+    <div class="alert alert-info">&#9432; No active project assigned yet.</div>
+  `);
+} else {
+
+const isComplete = proj.progress >= 100 || proj.stage >= 17;
+
+setContent(`
+  <div class="ph"><div class="pe">My Portal</div><div class="pt">Project Sign-Off</div></div>
+  <div class="card" style="max-width:600px;margin:0 auto">
+    <div style="text-align:center;padding:16px 0 24px">
+      <div style="font-size:48px;margin-bottom:12px">${isComplete ? '🎉' : '⏳'}</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:6px">${isComplete ? 'Project Ready for Sign-Off' : 'Project In Progress'}</div>
+      <div style="font-size:13px;color:var(--t3)">${isComplete ? 'Please review and approve your completed project below.' : 'Sign-off will be available once the project reaches completion stage.'}</div>
+    </div>
+
+    <div style="background:var(--bg);border-radius:var(--rs);padding:14px;margin-bottom:20px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);margin-bottom:4px">${escHtml(proj.code)}</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px">${escHtml(proj.title)}</div>
+      <div style="font-size:13px;color:var(--t3)">Stage ${proj.stage}/18 · Progress ${proj.progress}%</div>
+    </div>
+
+    ${isComplete ? `
+    <div id="signoff-msg"></div>
+    <div class="fgp">
+      <label class="flb">Your feedback (optional)</label>
+      <textarea class="fin" id="feedback" placeholder="Share your thoughts about working with NovahFalcons..." rows="4"></textarea>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:18px">
+      <input type="checkbox" id="confirm-check" style="margin-top:3px;accent-color:var(--teal)">
+      <label for="confirm-check" style="font-size:13px;color:var(--t2);cursor:pointer">
+        I confirm that I have reviewed the completed project and approve it for final delivery. I understand this constitutes my formal sign-off.
+      </label>
+    </div>
+    <button class="btn btn-p" style="width:100%" onclick="submitSignoff()">&#10003; Approve & Sign Off Project</button>
+    ` : `
+    <div style="text-align:center">
+      <a href="./dashboard.html" class="btn btn-s">Back to Dashboard</a>
+    </div>`}
+  </div>
+`);
+
+window.submitSignoff = async () => {
+  if (!document.getElementById('confirm-check').checked) {
+    document.getElementById('signoff-msg').innerHTML = '<div class="alert alert-err">Please check the confirmation box to proceed.</div>';
+    return;
+  }
+  const feedback = document.getElementById('feedback').value.trim();
+  await logActivity(ctx.user.id, 'SIGNED_OFF', 'Projects', `${proj.code}: ${feedback||'No feedback'}`);
+  document.getElementById('signoff-msg').innerHTML = '<div class="alert alert-ok">&#10003; Sign-off submitted! Your project manager has been notified. Thank you for choosing NovahFalcons!</div>';
+  document.querySelector('button[onclick="submitSignoff()"]').disabled = true;
+};
+
+} // end else
+</script>
+</body>
+</html>
