@@ -110,10 +110,14 @@ window.updateStatus = async (id, status) => {
   await logActivity(ctx.user.id,'UPDATED','Invoices','Status → '+status+' for '+id);
 };
 
+// Build project lookup map for reliable client_id access
+const projectMap = {};
+(projects||[]).forEach(p => { projectMap[p.id] = p; });
+
 window.createInvoice = async () => {
   const projEl  = document.getElementById('n-proj');
   const projId  = projEl.value;
-  const clientId = projEl.selectedOptions[0]?.dataset.client;
+  const clientId = projectMap[projId]?.client_id;
   const no      = document.getElementById('n-no').value.trim();
   const sub     = parseFloat(document.getElementById('n-sub').value)||0;
   const disc    = parseFloat(document.getElementById('n-disc').value)||0;
