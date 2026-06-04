@@ -11,7 +11,7 @@
 <div id="app"></div>
 <script type="module">
 import { initShell, setTitle, setContent, fmt, badge, escHtml } from '../assets/shell.js';
-import { getMyProject, getInvoices } from '../assets/supabase.js';
+import { supabase, getMyProject, getInvoices } from '../assets/supabase.js';
 
 const ctx = await initShell('invoices');
 if (!ctx) throw new Error('Not auth');
