@@ -79,10 +79,33 @@ select{padding:6px 10px;border-radius:8px;border:1px solid #D1D9F0;font-size:12.
 .role-admin{background:#E8D5FF;color:#5B21B6}.role-pm{background:#D1FAE5;color:#065F46}
 .role-acc{background:#FEF3C7;color:#92400E}.role-site{background:#DBEAFE;color:#1E40AF}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#B8C5E5;border-radius:3px}
-@media(max-width:768px){.g2,.g3{grid-template-columns:1fr}.kpi-grid{grid-template-columns:1fr 1fr}}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199}
+.sidebar-overlay.active{display:block}
+@media(max-width:768px){
+  .g2,.g3{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .sidebar{position:fixed;top:0;left:0;height:100%;z-index:200;transform:translateX(-100%);transition:transform .3s ease;width:240px!important;min-width:240px!important}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar.collapsed{width:240px!important;min-width:240px!important;transform:translateX(-100%)}
+  .sidebar.collapsed.open{transform:translateX(0)}
+  .main{width:100%}
+  .content{padding:12px}
+  .topbar{padding:0 12px;gap:8px}
+  .topbar-user-text{display:none}
+  .sh{flex-wrap:wrap;gap:8px}
+  .kpi-value{font-size:18px}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .card-header{flex-wrap:wrap;gap:6px}
+  .filter-bar select,.search-box{width:100%}
+  .g3{grid-template-columns:1fr}
+  .form-group~.form-group{margin-top:4px}
+  select{width:100%}
+  th,td{padding:7px 8px;font-size:11.5px}
+}
 </style>
 </head>
 <body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <div class="app">
 <div class="sidebar" id="sidebar">
   <div class="logo" onclick="toggleSidebar()">
@@ -152,7 +175,7 @@ select{padding:6px 10px;border-radius:8px;border:1px solid #D1D9F0;font-size:12.
       <div class="icon-btn">&#128269;</div>
       <div style="display:flex;align-items:center;gap:8px;padding:4px 10px;background:#F4F6FB;border-radius:8px;cursor:pointer">
         <div class="avatar">KR</div>
-        <div><div style="font-size:12px;font-weight:600">Kusagra R.</div><div style="font-size:10px;color:#718096">CEO / Admin</div></div>
+        <div class="topbar-user-text"><div style="font-size:12px;font-weight:600">Kusagra R.</div><div style="font-size:10px;color:#718096">CEO / Admin</div></div>
       </div>
     </div>
   </div>
@@ -771,9 +794,22 @@ function nav(id){
   });
   document.getElementById('page-title').textContent=pageNames[id]||id;
   initCharts(id);
+  if(window.innerWidth<=768){
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+    document.body.style.overflow='';
+  }
 }
 function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('collapsed');
+  const sb=document.getElementById('sidebar');
+  const ov=document.getElementById('sidebarOverlay');
+  if(window.innerWidth<=768){
+    const isOpen=sb.classList.toggle('open');
+    ov.classList.toggle('active',isOpen);
+    document.body.style.overflow=isOpen?'hidden':'';
+  } else {
+    sb.classList.toggle('collapsed');
+  }
 }
 const chartsInit={};
 function initCharts(page){
