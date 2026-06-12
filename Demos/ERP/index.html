@@ -12,7 +12,8 @@ body{font-family:Segoe UI,system-ui,sans-serif;background:#F4F6FB;color:#0B1E3D}
 .sidebar{width:240px;min-width:240px;background:#0B1E3D;display:flex;flex-direction:column;overflow-y:auto;transition:width .3s}
 .sidebar.collapsed{width:56px;min-width:56px}
 .logo{padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px;cursor:pointer;flex-shrink:0}
-.logo-icon{width:34px;height:34px;background:#1B6FE8;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+.logo-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.logo-icon img{width:34px;height:34px;object-fit:cover;border-radius:8px}
 .logo-text{color:#fff;font-weight:700;font-size:14px;white-space:nowrap}
 .logo-sub{color:rgba(255,255,255,.4);font-size:10px}
 .nav-section{padding:8px 0}
@@ -109,8 +110,8 @@ select{padding:6px 10px;border-radius:8px;border:1px solid #D1D9F0;font-size:12.
 <div class="app">
 <div class="sidebar" id="sidebar">
   <div class="logo" onclick="toggleSidebar()">
-    <div class="logo-icon">BP</div>
-    <div><div class="logo-text">BuilderPro ERP</div><div class="logo-sub">v3.2.1 Enterprise</div></div>
+    <div class="logo-icon"><img src="logo.png" alt="NovahFalcons"></div>
+    <div><div class="logo-text">NovahFalcons</div><div class="logo-sub">BuilderPro ERP Demo</div></div>
   </div>
   <div class="nav-section"><div class="nav-label">Overview</div>
     <div class="nav-item active" onclick="nav('dashboard')"><span class="ico">&#8861;</span><span>Dashboard</span></div>
